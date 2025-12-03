@@ -1,3 +1,4 @@
 packages:
-  - "packages/*"
+  - "agent"
+  - "obsidian"
   - "!**/test/**" # 排除测试目录

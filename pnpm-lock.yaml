@@ -12,7 +12,9 @@ importers:
         specifier: ^3.4.2
         version: 3.7.3
 
-  packages/obsidian:
+  agent: {}
+
+  obsidian:
     dependencies:
       '@agentclientprotocol/sdk':
         specifier: ^0.5.1
