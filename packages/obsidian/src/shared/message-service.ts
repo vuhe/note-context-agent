@@ -21,7 +21,6 @@ import type {
 import type { AgentError } from "../domain/models/agent-error";
 import type { AuthenticationMethod } from "../domain/models/chat-session";
 import { extractMentionedNotes, type IMentionService } from "./mention-utils";
-import { convertWindowsPathToWsl } from "./wsl-utils";
 
 // ============================================================================
 // Types
@@ -42,9 +41,6 @@ export interface PrepareMessageInput {
 
   /** Whether auto-mention is temporarily disabled */
   isAutoMentionDisabled?: boolean;
-
-  /** Whether to convert paths to WSL format (Windows + WSL mode) */
-  convertToWsl?: boolean;
 }
 
 /**
@@ -154,13 +150,9 @@ export async function prepareMessage(
         truncationNote = `\n\n[Note: This note was truncated. Original length: ${content.length} characters, showing first ${MAX_NOTE_LENGTH} characters]`;
       }
 
-      let absolutePath = input.vaultBasePath
+      const absolutePath = input.vaultBasePath
         ? `${input.vaultBasePath}/${file.path}`
         : file.path;
-
-      if (input.convertToWsl) {
-        absolutePath = convertWindowsPathToWsl(absolutePath);
-      }
 
       const contextBlock = `<obsidian_mentioned_note ref="${absolutePath}">\n${processedContent}${truncationNote}\n</obsidian_mentioned_note>`;
       contextBlocks.push(contextBlock);
@@ -175,7 +167,6 @@ export async function prepareMessage(
       input.activeNote.path,
       input.vaultBasePath,
       vaultAccess,
-      input.convertToWsl ?? false,
       input.activeNote.selection,
     );
     contextBlocks.push(autoMentionContextBlock);
@@ -216,17 +207,12 @@ async function buildAutoMentionContext(
   notePath: string,
   vaultPath: string,
   vaultAccess: IVaultAccess,
-  convertToWsl: boolean,
   selection?: {
     from: EditorPosition;
     to: EditorPosition;
   },
 ): Promise<string> {
-  let absolutePath = vaultPath ? `${vaultPath}/${notePath}` : notePath;
-
-  if (convertToWsl) {
-    absolutePath = convertWindowsPathToWsl(absolutePath);
-  }
+  const absolutePath = vaultPath ? `${vaultPath}/${notePath}` : notePath;
 
   if (selection) {
     const fromLine = selection.from.line + 1;

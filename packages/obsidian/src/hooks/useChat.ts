@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import type {
   ChatMessage,
   MessageContent,
@@ -10,7 +10,6 @@ import type { AuthenticationMethod } from "../domain/models/chat-session";
 import type { ErrorInfo } from "../domain/models/agent-error";
 import type { IMentionService } from "../shared/mention-utils";
 import { prepareMessage, sendPreparedMessage } from "../shared/message-service";
-import { Platform } from "obsidian";
 
 // ============================================================================
 // Types
@@ -285,7 +284,6 @@ export function useChat(
           activeNote: options.activeNote,
           vaultBasePath: options.vaultBasePath,
           isAutoMentionDisabled: options.isAutoMentionDisabled,
-          convertToWsl: false,
         },
         vaultAccess,
         mentionService,
