@@ -12,7 +12,35 @@ importers:
         specifier: ^3.4.2
         version: 3.7.3
 
-  agent: {}
+  note-agent:
+    devDependencies:
+      '@types/node':
+        specifier: ^16.11.6
+        version: 16.18.126
+      '@typescript-eslint/parser':
+        specifier: ^8.0.0
+        version: 8.48.1(eslint@9.39.1)(typescript@5.9.3)
+      '@typescript-eslint/utils':
+        specifier: ^8.0.0
+        version: 8.48.1(eslint@9.39.1)(typescript@5.9.3)
+      builtin-modules:
+        specifier: 3.3.0
+        version: 3.3.0
+      esbuild:
+        specifier: 0.17.3
+        version: 0.17.3
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.1
+      tslib:
+        specifier: 2.4.0
+        version: 2.4.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.0.0
+        version: 8.48.1(eslint@9.39.1)(typescript@5.9.3)
 
   obsidian:
     dependencies:

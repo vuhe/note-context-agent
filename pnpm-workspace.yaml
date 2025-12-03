@@ -1,4 +1,4 @@
 packages:
-  - "agent"
+  - "note-agent"
   - "obsidian"
   - "!**/test/**" # 排除测试目录
