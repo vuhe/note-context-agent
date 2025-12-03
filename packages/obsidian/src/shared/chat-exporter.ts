@@ -15,8 +15,6 @@ export class ChatExporter {
 
   async exportToMarkdown(
     messages: ChatMessage[],
-    agentLabel: string,
-    agentId: string,
     sessionId: string,
     sessionCreatedAt: Date,
     openFile = true,
@@ -37,14 +35,11 @@ export class ChatExporter {
 
     try {
       const frontmatter = this.generateFrontmatter(
-        agentLabel,
-        agentId,
         sessionId,
         effectiveTimestamp,
       );
       const chatContent = this.convertMessagesToMarkdown(
         messages,
-        agentLabel,
         sessionId,
         effectiveTimestamp,
       );
@@ -104,12 +99,7 @@ export class ChatExporter {
     return template.replace("{date}", dateStr).replace("{time}", timeStr);
   }
 
-  private generateFrontmatter(
-    agentLabel: string,
-    agentId: string,
-    sessionId: string,
-    timestamp: Date,
-  ): string {
+  private generateFrontmatter(sessionId: string, timestamp: Date): string {
     // Format timestamp in local timezone: YYYY-MM-DDTHH:mm:ss
     const year = timestamp.getFullYear();
     const month = String(timestamp.getMonth() + 1).padStart(2, "0");
@@ -121,8 +111,6 @@ export class ChatExporter {
 
     return `---
 created: ${localTimestamp}
-agentDisplayName: ${agentLabel}
-agentId: ${agentId}
 session_id: ${sessionId}
 tags: [agent-client]
 ---`;
@@ -130,11 +118,10 @@ tags: [agent-client]
 
   private convertMessagesToMarkdown(
     messages: ChatMessage[],
-    agentLabel: string,
     sessionId: string,
     timestamp: Date,
   ): string {
-    let markdown = `# ${agentLabel}\n\n`;
+    let markdown = "# Agent \n\n";
 
     for (const message of messages) {
       const timeStr = message.timestamp.toLocaleTimeString();

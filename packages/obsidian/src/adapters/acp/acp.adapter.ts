@@ -1,10 +1,7 @@
-import { spawn, ChildProcess } from "child_process";
 import * as acp from "@agentclientprotocol/sdk";
-import { Platform } from "obsidian";
 
 import type {
   IAgentClient,
-  AgentConfig,
   InitializeResult,
   NewSessionResult,
   PermissionRequest,
@@ -19,11 +16,6 @@ import { AcpTypeConverter } from "./acp-type-converter";
 import { Logger } from "../../shared/logger";
 import type AgentClientPlugin from "../../plugin";
 import type { SlashCommand } from "src/domain/models/chat-session";
-import {
-  wrapCommandForWsl,
-  convertWindowsPathToWsl,
-} from "../../shared/wsl-utils";
-import { resolveCommandDirectory } from "../../shared/path-utils";
 
 /**
  * Extended ACP Client interface for UI layer.
@@ -54,8 +46,6 @@ export interface IAcpClient extends acp.Client {
  * - Provides callbacks for UI updates
  */
 export class AcpAdapter implements IAgentClient, IAcpClient {
-  private connection: acp.ClientSideConnection | null = null;
-  private agentProcess: ChildProcess | null = null;
   private logger: Logger;
 
   // Callback handlers
@@ -76,9 +66,8 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
   ) => boolean;
 
   // Configuration state
-  private currentConfig: AgentConfig | null = null;
+  private workingDirectory: string | null = null;
   private isInitializedFlag = false;
-  private currentAgentId: string | null = null;
   private autoAllowPermissions = false;
 
   // IAcpClient implementation properties
@@ -137,333 +126,43 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
    * Initialize connection to an AI agent.
    * Spawns the agent process and establishes ACP connection.
    */
-  async initialize(config: AgentConfig): Promise<InitializeResult> {
+  async initialize(workingDirectory: string): Promise<InitializeResult> {
     this.logger.log(
-      "[AcpAdapter] Starting initialization with config:",
-      config,
-    );
-    this.logger.log(
-      `[AcpAdapter] Current state - process: ${!!this.agentProcess}, PID: ${this.agentProcess?.pid}`,
+      "[AcpAdapter] Starting agent process in directory:",
+      workingDirectory,
     );
 
-    // Clean up existing process if any (e.g., when switching agents)
-    if (this.agentProcess) {
-      this.logger.log(
-        `[AcpAdapter] Killing existing process (PID: ${this.agentProcess.pid})`,
-      );
-      this.agentProcess.kill();
-      this.agentProcess = null;
-    }
-
-    // Clean up existing connection
-    if (this.connection) {
-      this.logger.log("[AcpAdapter] Cleaning up existing connection");
-      this.connection = null;
-    }
-
-    this.currentConfig = config;
+    this.workingDirectory = workingDirectory;
 
     // Update auto-allow permissions from plugin settings
     this.autoAllowPermissions = this.plugin.settings.autoAllowPermissions;
 
-    // Validate command
-    if (!config.command || config.command.trim().length === 0) {
-      const error: AgentError = {
-        id: crypto.randomUUID(),
-        category: "configuration",
-        severity: "error",
-        title: "Command Not Configured",
-        message: `Command not configured for agent "${config.displayName}" (${config.id}).`,
-        suggestion: "Please configure the agent command in settings.",
-        occurredAt: new Date(),
-        agentId: config.id,
-      };
-      this.errorCallback?.(error);
-      throw new Error(error.message);
-    }
+    // TODO: 接入后端初始化，但更可能什么也不做
 
-    const command = config.command.trim();
-    const args = config.args.length > 0 ? [...config.args] : [];
+    // Mark as initialized
+    this.isInitializedFlag = true;
 
-    this.logger.log(
-      `[AcpAdapter] Active agent: ${config.displayName} (${config.id})`,
-    );
-    this.logger.log("[AcpAdapter] Command:", command);
-    this.logger.log(
-      "[AcpAdapter] Args:",
-      args.length > 0 ? args.join(" ") : "(none)",
-    );
-
-    // Prepare environment variables
-    const baseEnv: NodeJS.ProcessEnv = {
-      ...process.env,
-      ...(config.env || {}),
+    return {
+      protocolVersion: 0,
+      authMethods: [],
     };
-
-    // Add Node.js path to PATH if specified in settings
-    if (
-      this.plugin.settings.nodePath &&
-      this.plugin.settings.nodePath.trim().length > 0
-    ) {
-      const nodeDir = resolveCommandDirectory(
-        this.plugin.settings.nodePath.trim(),
-      );
-      if (nodeDir) {
-        const separator = Platform.isWin ? ";" : ":";
-        baseEnv.PATH = baseEnv.PATH
-          ? `${nodeDir}${separator}${baseEnv.PATH}`
-          : nodeDir;
-      }
-    }
-
-    this.logger.log(
-      "[AcpAdapter] Starting agent process in directory:",
-      config.workingDirectory,
-    );
-
-    // Prepare command and args for spawning
-    let spawnCommand = command;
-    let spawnArgs = args;
-
-    // WSL mode for Windows (wrap command to run inside WSL)
-    if (Platform.isWin && this.plugin.settings.windowsWslMode) {
-      // Extract node directory from settings for PATH
-      const nodeDir = this.plugin.settings.nodePath
-        ? resolveCommandDirectory(this.plugin.settings.nodePath.trim()) ||
-          undefined
-        : undefined;
-
-      const wslWrapped = wrapCommandForWsl(
-        command,
-        args,
-        config.workingDirectory,
-        this.plugin.settings.windowsWslDistribution,
-        nodeDir,
-      );
-      spawnCommand = wslWrapped.command;
-      spawnArgs = wslWrapped.args;
-      this.logger.log(
-        "[AcpAdapter] Using WSL mode:",
-        this.plugin.settings.windowsWslDistribution || "default",
-        "with command:",
-        spawnCommand,
-        spawnArgs,
-      );
-    }
-    // On macOS and Linux, wrap the command in a login shell to inherit the user's environment
-    // This ensures that PATH modifications in .zshrc/.bash_profile are available
-    else if (Platform.isMacOS || Platform.isLinux) {
-      const shell = Platform.isMacOS ? "/bin/zsh" : "/bin/bash";
-      const commandString = [command, ...args]
-        .map((arg) => "'" + arg.replace(/'/g, "'\\''") + "'")
-        .join(" ");
-      spawnCommand = shell;
-      spawnArgs = ["-l", "-c", commandString];
-      this.logger.log(
-        "[AcpAdapter] Using login shell:",
-        shell,
-        "with command:",
-        commandString,
-      );
-    }
-
-    // Use shell on Windows for .cmd/.bat files, but NOT in WSL mode
-    // When using WSL, wsl.exe is the command and doesn't need shell wrapper
-    const needsShell = Platform.isWin && !this.plugin.settings.windowsWslMode;
-
-    // Spawn the agent process
-    const agentProcess = spawn(spawnCommand, spawnArgs, {
-      stdio: ["pipe", "pipe", "pipe"],
-      env: baseEnv,
-      cwd: config.workingDirectory,
-      shell: needsShell,
-    });
-    this.agentProcess = agentProcess;
-
-    const agentLabel = `${config.displayName} (${config.id})`;
-
-    // Set up process event handlers
-    agentProcess.on("spawn", () => {
-      this.logger.log(
-        `[AcpAdapter] ${agentLabel} process spawned successfully, PID:`,
-        agentProcess.pid,
-      );
-    });
-
-    agentProcess.on("error", (error) => {
-      this.logger.error(`[AcpAdapter] ${agentLabel} process error:`, error);
-
-      const agentError: AgentError = {
-        id: crypto.randomUUID(),
-        category: "connection",
-        severity: "error",
-        occurredAt: new Date(),
-        agentId: config.id,
-        originalError: error,
-        ...this.getErrorInfo(error, command, agentLabel),
-      };
-
-      this.errorCallback?.(agentError);
-    });
-
-    agentProcess.on("exit", (code, signal) => {
-      this.logger.log(
-        `[AcpAdapter] ${agentLabel} process exited with code:`,
-        code,
-        "signal:",
-        signal,
-      );
-
-      if (code === 127) {
-        this.logger.error(`[AcpAdapter] Command not found: ${command}`);
-
-        const error: AgentError = {
-          id: crypto.randomUUID(),
-          category: "configuration",
-          severity: "error",
-          title: "Command Not Found",
-          message: `The command "${command}" could not be found. Please check the path configuration for ${agentLabel}.`,
-          suggestion: this.getCommandNotFoundSuggestion(command),
-          occurredAt: new Date(),
-          agentId: config.id,
-          code: code,
-        };
-
-        this.errorCallback?.(error);
-      }
-    });
-
-    agentProcess.on("close", (code, signal) => {
-      this.logger.log(
-        `[AcpAdapter] ${agentLabel} process closed with code:`,
-        code,
-        "signal:",
-        signal,
-      );
-    });
-
-    agentProcess.stderr?.setEncoding("utf8");
-    agentProcess.stderr?.on("data", (data) => {
-      this.logger.log(`[AcpAdapter] ${agentLabel} stderr:`, data);
-    });
-
-    // Create stream for ACP communication
-    // stdio is configured as ["pipe", "pipe", "pipe"] so stdin/stdout are guaranteed to exist
-    if (!agentProcess.stdin || !agentProcess.stdout) {
-      throw new Error("Agent process stdin/stdout not available");
-    }
-
-    const stdin = agentProcess.stdin;
-    const stdout = agentProcess.stdout;
-
-    const input = new WritableStream<Uint8Array>({
-      write(chunk: Uint8Array) {
-        stdin.write(chunk);
-      },
-      close() {
-        stdin.end();
-      },
-    });
-    const output = new ReadableStream<Uint8Array>({
-      start(controller) {
-        stdout.on("data", (chunk: Uint8Array) => {
-          controller.enqueue(chunk);
-        });
-        stdout.on("end", () => {
-          controller.close();
-        });
-      },
-    });
-
-    this.logger.log(
-      "[AcpAdapter] Using working directory:",
-      config.workingDirectory,
-    );
-
-    const stream = acp.ndJsonStream(input, output);
-    this.connection = new acp.ClientSideConnection(() => this, stream);
-
-    try {
-      this.logger.log("[AcpAdapter] Starting ACP initialization...");
-
-      const initResult = await this.connection.initialize({
-        protocolVersion: acp.PROTOCOL_VERSION,
-        clientCapabilities: {
-          fs: {
-            readTextFile: false,
-            writeTextFile: false,
-          },
-          terminal: false,
-        },
-      });
-
-      this.logger.log(
-        `[AcpAdapter] ✅ Connected to agent (protocol v${initResult.protocolVersion})`,
-      );
-      this.logger.log("[AcpAdapter] Auth methods:", initResult.authMethods);
-
-      // Mark as initialized and store agent ID
-      this.isInitializedFlag = true;
-      this.currentAgentId = config.id;
-
-      return {
-        protocolVersion: initResult.protocolVersion,
-        authMethods: initResult.authMethods || [],
-      };
-    } catch (error) {
-      this.logger.error("[AcpAdapter] Initialization Error:", error);
-
-      // Reset flags on failure
-      this.isInitializedFlag = false;
-      this.currentAgentId = null;
-
-      const agentError: AgentError = {
-        id: crypto.randomUUID(),
-        category: "connection",
-        severity: "error",
-        title: "Initialization Failed",
-        message: `Failed to initialize connection to ${agentLabel}: ${error instanceof Error ? error.message : String(error)}`,
-        suggestion: "Please check the agent configuration and try again.",
-        occurredAt: new Date(),
-        agentId: config.id,
-        originalError: error,
-      };
-
-      this.errorCallback?.(agentError);
-      throw error;
-    }
   }
 
   /**
    * Create a new chat session with the agent.
    */
   async newSession(workingDirectory: string): Promise<NewSessionResult> {
-    if (!this.connection) {
-      throw new Error("Connection not initialized. Call initialize() first.");
-    }
-
     try {
       this.logger.log("[AcpAdapter] Creating new session...");
 
-      // Convert Windows path to WSL path if in WSL mode
-      let sessionCwd = workingDirectory;
-      if (Platform.isWin && this.plugin.settings.windowsWslMode) {
-        sessionCwd = convertWindowsPathToWsl(workingDirectory);
-      }
+      // TODO: 在此，后端应该创建对话记录和上下文，用于提供对应的对话上下文和记录
 
-      this.logger.log("[AcpAdapter] Using working directory:", sessionCwd);
+      const sessionId = "backend session";
 
-      const sessionResult = await this.connection.newSession({
-        cwd: sessionCwd,
-        mcpServers: [],
-      });
-
-      this.logger.log(
-        `[AcpAdapter] 📝 Created session: ${sessionResult.sessionId}`,
-      );
+      this.logger.log(`[AcpAdapter] 📝 Created session: ${sessionId}`);
 
       return {
-        sessionId: sessionResult.sessionId,
+        sessionId: sessionId,
       };
     } catch (error) {
       this.logger.error("[AcpAdapter] New Session Error:", error);
@@ -476,7 +175,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
         message: `Failed to create new session: ${error instanceof Error ? error.message : String(error)}`,
         suggestion: "Please try disconnecting and reconnecting to the agent.",
         occurredAt: new Date(),
-        agentId: this.currentConfig?.id,
         originalError: error,
       };
 
@@ -489,12 +187,8 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
    * Authenticate with the agent using a specific method.
    */
   async authenticate(methodId: string): Promise<boolean> {
-    if (!this.connection) {
-      throw new Error("Connection not initialized. Call initialize() first.");
-    }
-
     try {
-      await this.connection.authenticate({ methodId });
+      // TODO: 此处应该交给后端验证是否可用
       this.logger.log("[AcpAdapter] ✅ authenticate ok:", methodId);
       return true;
     } catch (error: unknown) {
@@ -529,7 +223,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
           suggestion:
             "You have exceeded the API rate limit. Please wait a few moments before trying again.",
           occurredAt: new Date(),
-          agentId: this.currentConfig?.id,
           originalError: error,
         };
       } else {
@@ -543,7 +236,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
           suggestion:
             "Please check your API key or authentication credentials in settings.",
           occurredAt: new Date(),
-          agentId: this.currentConfig?.id,
           originalError: error,
         };
       }
@@ -557,25 +249,14 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
    * Send a message to the agent in a specific session.
    */
   async sendMessage(sessionId: string, message: string): Promise<void> {
-    if (!this.connection) {
-      throw new Error("Connection not initialized. Call initialize() first.");
-    }
-
     // Reset current message for new assistant response
     this.resetCurrentMessage();
 
     try {
       this.logger.log(`[AcpAdapter] ✅ Sending Message...: ${message}`);
 
-      const promptResult = await this.connection.prompt({
-        sessionId: sessionId,
-        prompt: [
-          {
-            type: "text",
-            text: message,
-          },
-        ],
-      });
+      // TODO: 应该替换为后端的处理，发送一条之后，后端会一直进行输出直到结束
+      const promptResult = { stopReason: "backend stop" };
 
       this.logger.log(
         `[AcpAdapter] ✅ Agent completed with: ${promptResult.stopReason}`,
@@ -622,7 +303,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
         message: `Failed to send message: ${error instanceof Error ? error.message : String(error)}`,
         suggestion: "Please check your connection and try again.",
         occurredAt: new Date(),
-        agentId: this.currentConfig?.id,
         sessionId: sessionId,
         originalError: error,
       };
@@ -636,17 +316,10 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
    * Cancel the current operation in a session.
    */
   async cancel(sessionId: string): Promise<void> {
-    if (!this.connection) {
-      this.logger.warn("[AcpAdapter] Cannot cancel: no connection");
-      return;
-    }
-
     try {
       this.logger.log("[AcpAdapter] Sending session/cancel notification...");
 
-      await this.connection.cancel({
-        sessionId: sessionId,
-      });
+      // 应该向后端发送取消请求
 
       this.logger.log("[AcpAdapter] Cancellation request sent successfully");
 
@@ -669,22 +342,8 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
     // Cancel all pending operations
     this.cancelAllOperations();
 
-    // Kill the agent process
-    if (this.agentProcess) {
-      this.logger.log(
-        `[AcpAdapter] Killing agent process (PID: ${this.agentProcess.pid})`,
-      );
-      this.agentProcess.kill();
-      this.agentProcess = null;
-    }
-
-    // Clear connection and config references
-    this.connection = null;
-    this.currentConfig = null;
-
     // Reset initialization state
     this.isInitializedFlag = false;
-    this.currentAgentId = null;
 
     this.logger.log("[AcpAdapter] Disconnected");
     return Promise.resolve();
@@ -696,20 +355,7 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
    * Implementation of IAgentClient.isInitialized()
    */
   isInitialized(): boolean {
-    return (
-      this.isInitializedFlag &&
-      this.connection !== null &&
-      this.agentProcess !== null
-    );
-  }
-
-  /**
-   * Get the ID of the currently connected agent.
-   *
-   * Implementation of IAgentClient.getCurrentAgentId()
-   */
-  getCurrentAgentId(): string | null {
-    return this.currentAgentId;
+    return this.isInitializedFlag;
   }
 
   /**
@@ -737,12 +383,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
    * Respond to a permission request from the agent.
    */
   respondToPermission(requestId: string, optionId: string): Promise<void> {
-    if (!this.connection) {
-      throw new Error(
-        "ACP connection not initialized. Call initialize() first.",
-      );
-    }
-
     this.logger.log(
       "[AcpAdapter] Responding to permission request:",
       requestId,
@@ -751,45 +391,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
     );
     this.handlePermissionResponse(requestId, optionId);
     return Promise.resolve();
-  }
-
-  // Helper methods
-
-  /**
-   * Get error information for process spawn errors.
-   */
-  private getErrorInfo(
-    error: Error,
-    command: string,
-    agentLabel: string,
-  ): { title: string; message: string; suggestion: string } {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return {
-        title: "Command Not Found",
-        message: `The command "${command}" could not be found. Please check the path configuration for ${agentLabel}.`,
-        suggestion: this.getCommandNotFoundSuggestion(command),
-      };
-    }
-
-    return {
-      title: "Agent Startup Error",
-      message: `Failed to start ${agentLabel}: ${error.message}`,
-      suggestion: "Please check the agent configuration in settings.",
-    };
-  }
-
-  /**
-   * Get platform-specific suggestions for command not found errors.
-   */
-  private getCommandNotFoundSuggestion(command: string): string {
-    const commandName =
-      command.split("/").pop()?.split("\\").pop() || "command";
-
-    if (Platform.isWin) {
-      return `1. Verify the agent path: Use "where ${commandName}" in Command Prompt to find the correct path. 2. If the agent requires Node.js, also check that Node.js path is correctly set in General Settings (use "where node" to find it).`;
-    } else {
-      return `1. Verify the agent path: Use "which ${commandName}" in Terminal to find the correct path. 2. If the agent requires Node.js, also check that Node.js path is correctly set in General Settings (use "which node" to find it).`;
-    }
   }
 
   // ========================================================================

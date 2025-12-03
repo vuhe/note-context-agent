@@ -16,42 +16,6 @@ import type { AgentError } from "../models/agent-error";
 import type { AuthenticationMethod } from "../models/chat-session";
 
 /**
- * Runtime configuration for launching an AI agent process.
- *
- * This is the execution-time configuration used when spawning an agent process,
- * as opposed to BaseAgentSettings which is the storage format in plugin settings.
- *
- * Key differences from BaseAgentSettings:
- * - env is converted to Record<string, string> format for process.spawn()
- * - workingDirectory is added for the session execution context
- *
- * Adapters are responsible for converting BaseAgentSettings → AgentConfig
- * before launching the agent process.
- */
-export interface AgentConfig {
-  /** Unique identifier for this agent (e.g., "claude", "gemini") */
-  id: string;
-
-  /** Display name for the agent */
-  displayName: string;
-
-  /** Command to execute (full path to executable) */
-  command: string;
-
-  /** Command-line arguments */
-  args: string[];
-
-  /**
-   * Environment variables for the agent process.
-   * Converted from AgentEnvVar[] to Record format for process.spawn().
-   */
-  env?: Record<string, string>;
-
-  /** Working directory for the agent session */
-  workingDirectory: string;
-}
-
-/**
  * Permission request from an agent.
  *
  * Represents a request for user approval to perform an operation
@@ -108,11 +72,11 @@ export interface IAgentClient {
    *
    * Spawns the agent process and performs protocol handshake.
    *
-   * @param config - Agent configuration
+   * @param workingDirectory - Working directory for the agent
    * @returns Promise resolving to initialization result
    * @throws AgentError if connection fails
    */
-  initialize(config: AgentConfig): Promise<InitializeResult>;
+  initialize(workingDirectory: string): Promise<InitializeResult>;
 
   /**
    * Create a new chat session.
@@ -213,13 +177,4 @@ export interface IAgentClient {
    * @returns true if initialized and connected, false otherwise
    */
   isInitialized(): boolean;
-
-  /**
-   * Get the ID of the currently connected agent.
-   *
-   * Returns null if no agent is connected.
-   *
-   * @returns Agent ID or null
-   */
-  getCurrentAgentId(): string | null;
 }

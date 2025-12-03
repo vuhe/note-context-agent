@@ -86,13 +86,6 @@ export interface SessionContext {
   authMethods: AuthenticationMethod[];
 }
 
-/**
- * Settings context required for message preparation.
- */
-export interface SettingsContext {
-  windowsWslMode: boolean;
-}
-
 // ============================================================================
 // Hook Implementation
 // ============================================================================
@@ -120,7 +113,6 @@ export function useChat(
   vaultAccess: IVaultAccess,
   mentionService: IMentionService,
   sessionContext: SessionContext,
-  settingsContext: SettingsContext,
 ): UseChatReturn {
   // Message state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -273,13 +265,6 @@ export function useChat(
   }, []);
 
   /**
-   * Check if paths should be converted to WSL format.
-   */
-  const shouldConvertToWsl = useMemo(() => {
-    return Platform.isWin && settingsContext.windowsWslMode;
-  }, [settingsContext.windowsWslMode]);
-
-  /**
    * Send a message to the agent.
    */
   const sendMessage = useCallback(
@@ -300,7 +285,7 @@ export function useChat(
           activeNote: options.activeNote,
           vaultBasePath: options.vaultBasePath,
           isAutoMentionDisabled: options.isAutoMentionDisabled,
-          convertToWsl: shouldConvertToWsl,
+          convertToWsl: false,
         },
         vaultAccess,
         mentionService,
@@ -379,7 +364,7 @@ export function useChat(
       mentionService,
       sessionContext.sessionId,
       sessionContext.authMethods,
-      shouldConvertToWsl,
+      false,
       addMessage,
     ],
   );

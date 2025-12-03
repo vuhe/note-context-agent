@@ -20,8 +20,6 @@ export interface ChatInputProps {
   isSending: boolean;
   /** Whether the session is ready for user input */
   isSessionReady: boolean;
-  /** Display name of the active agent */
-  agentLabel: string;
   /** Available slash commands */
   availableCommands: SlashCommand[];
   /** Whether auto-mention setting is enabled */
@@ -61,7 +59,6 @@ export interface ChatInputProps {
 export function ChatInput({
   isSending,
   isSessionReady,
-  agentLabel,
   availableCommands,
   autoMentionEnabled,
   restoredMessage,
@@ -413,7 +410,7 @@ export function ChatInput({
     !isSending && (inputValue.trim() === "" || !isSessionReady);
 
   // Placeholder text
-  const placeholder = `Message ${agentLabel} - @ to mention notes${availableCommands.length > 0 ? ", / for commands" : ""}`;
+  const placeholder = `Message agent - @ to mention notes${availableCommands.length > 0 ? ", / for commands" : ""}`;
 
   return (
     <div className="chat-input-container">

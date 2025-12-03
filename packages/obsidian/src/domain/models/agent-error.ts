@@ -85,9 +85,6 @@ export interface AgentError extends ErrorInfo {
   /** Timestamp when the error occurred */
   occurredAt: Date;
 
-  /** ID of the agent where the error occurred (if applicable) */
-  agentId?: string;
-
   /** Session ID where the error occurred (null if no session) */
   sessionId?: string | null;
 

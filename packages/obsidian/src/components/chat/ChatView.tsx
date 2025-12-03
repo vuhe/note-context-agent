@@ -107,18 +107,10 @@ function ChatComponent({
     isReady: isSessionReady,
   } = agentSession;
 
-  const chat = useChat(
-    acpAdapter,
-    vaultAccessAdapter,
-    noteMentionService,
-    {
-      sessionId: session.sessionId,
-      authMethods: session.authMethods,
-    },
-    {
-      windowsWslMode: settings.windowsWslMode,
-    },
-  );
+  const chat = useChat(acpAdapter, vaultAccessAdapter, noteMentionService, {
+    sessionId: session.sessionId,
+    authMethods: session.authMethods,
+  });
 
   const { messages, isSending } = chat;
 
@@ -139,67 +131,34 @@ function ChatComponent({
   // ============================================================
   // Local State
   // ============================================================
-  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [restoredMessage, setRestoredMessage] = useState<string | null>(null);
-
-  // ============================================================
-  // Computed Values
-  // ============================================================
-  const activeAgentLabel = useMemo(() => {
-    const activeId = session.agentId;
-    if (activeId === plugin.settings.claude.id) {
-      return plugin.settings.claude.displayName || plugin.settings.claude.id;
-    }
-    if (activeId === plugin.settings.codex.id) {
-      return plugin.settings.codex.displayName || plugin.settings.codex.id;
-    }
-    if (activeId === plugin.settings.gemini.id) {
-      return plugin.settings.gemini.displayName || plugin.settings.gemini.id;
-    }
-    const custom = plugin.settings.customAgents.find(
-      (agent) => agent.id === activeId,
-    );
-    return custom?.displayName || custom?.id || activeId;
-  }, [session.agentId, plugin.settings]);
 
   // ============================================================
   // Callbacks
   // ============================================================
   /**
    * Handle new chat request.
-   * @param requestedAgentId - If provided, switch to this agent (from "New chat with [Agent]" command)
    */
-  const handleNewChat = useCallback(
-    async (requestedAgentId?: string) => {
-      const isAgentSwitch =
-        requestedAgentId && requestedAgentId !== session.agentId;
+  const handleNewChat = useCallback(async () => {
+    const isAgentSwitch = false;
 
-      // Skip if already empty AND not switching agents
-      if (messages.length === 0 && !isAgentSwitch) {
-        new Notice("[Agent Client] Already a new session");
-        return;
-      }
+    // Skip if already empty AND not switching agents
+    if (messages.length === 0 && !isAgentSwitch) {
+      new Notice("[Agent Client] Already a new session");
+      return;
+    }
 
-      logger.log(
-        `[Debug] Creating new session${isAgentSwitch ? ` with agent: ${requestedAgentId}` : ""}...`,
-      );
+    logger.log("[Debug] Creating new session...");
 
-      // Auto-export current chat before starting new one (if has messages)
-      if (messages.length > 0) {
-        await autoExport.autoExportIfEnabled("newChat", messages, session);
-      }
+    // Auto-export current chat before starting new one (if has messages)
+    if (messages.length > 0) {
+      await autoExport.autoExportIfEnabled("newChat", messages, session);
+    }
 
-      // Switch agent if requested
-      if (isAgentSwitch) {
-        await agentSession.switchAgent(requestedAgentId);
-      }
-
-      autoMention.toggle(false);
-      chat.clearMessages();
-      await agentSession.restartSession();
-    },
-    [messages, session, logger, autoExport, autoMention, chat, agentSession],
-  );
+    autoMention.toggle(false);
+    chat.clearMessages();
+    await agentSession.restartSession();
+  }, [messages, session, logger, autoExport, autoMention, chat, agentSession]);
 
   const handleExportChat = useCallback(async () => {
     if (messages.length === 0) {
@@ -212,8 +171,6 @@ function ChatComponent({
       const openFile = plugin.settings.exportSettings.openFileAfterExport;
       const filePath = await exporter.exportToMarkdown(
         messages,
-        session.agentDisplayName,
-        session.agentId,
         session.sessionId || "unknown",
         session.createdAt,
         openFile,
@@ -269,7 +226,7 @@ function ChatComponent({
   useEffect(() => {
     logger.log("[Debug] Starting connection setup via useAgentSession...");
     void agentSession.createSession();
-  }, [session.agentId, agentSession.createSession]);
+  }, [agentSession.createSession]);
 
   // Refs for cleanup (to access latest values in cleanup function)
   const messagesRef = useRef(messages);
@@ -298,19 +255,6 @@ function ChatComponent({
     // Empty dependency array - only run on unmount
   }, []);
 
-  // Monitor agent changes from settings when messages are empty
-  useEffect(() => {
-    const newActiveAgentId = settings.activeAgentId || settings.claude.id;
-    if (messages.length === 0 && newActiveAgentId !== session.agentId) {
-      void agentSession.switchAgent(newActiveAgentId);
-    }
-  }, [
-    settings.activeAgentId,
-    messages.length,
-    session.agentId,
-    agentSession.switchAgent,
-  ]);
-
   // ============================================================
   // Effects - ACP Adapter Callbacks
   // ============================================================
@@ -328,18 +272,6 @@ function ChatComponent({
     chat.updateMessage,
     agentSession.updateAvailableCommands,
   ]);
-
-  // ============================================================
-  // Effects - Update Check
-  // ============================================================
-  useEffect(() => {
-    plugin
-      .checkForUpdates()
-      .then(setIsUpdateAvailable)
-      .catch((error) => {
-        console.error("Failed to check for updates:", error);
-      });
-  }, [plugin]);
 
   // ============================================================
   // Effects - Auto-mention Active Note Tracking
@@ -391,11 +323,11 @@ function ChatComponent({
       workspace as unknown as {
         on: (
           name: string,
-          callback: (agentId?: string) => void,
+          callback: () => void,
         ) => ReturnType<typeof workspace.on>;
       }
-    ).on("agent-client:new-chat-requested", (agentId?: string) => {
-      void handleNewChat(agentId);
+    ).on("agent-client:new-chat-requested", () => {
+      void handleNewChat();
     });
 
     return () => {
@@ -455,8 +387,6 @@ function ChatComponent({
   return (
     <div className="chat-view-container">
       <ChatHeader
-        agentLabel={activeAgentLabel}
-        isUpdateAvailable={isUpdateAvailable}
         onNewChat={() => void handleNewChat()}
         onExportChat={() => void handleExportChat()}
         onOpenSettings={handleOpenSettings}
@@ -466,7 +396,6 @@ function ChatComponent({
         messages={messages}
         isSending={isSending}
         isSessionReady={isSessionReady}
-        agentLabel={activeAgentLabel}
         errorInfo={errorInfo}
         plugin={plugin}
         view={view}
@@ -478,7 +407,6 @@ function ChatComponent({
       <ChatInput
         isSending={isSending}
         isSessionReady={isSessionReady}
-        agentLabel={activeAgentLabel}
         availableCommands={session.availableCommands || []}
         autoMentionEnabled={settings.autoMentionActiveNote}
         restoredMessage={restoredMessage}

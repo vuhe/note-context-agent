@@ -5,10 +5,6 @@ import { HeaderButton } from "./HeaderButton";
  * Props for ChatHeader component
  */
 export interface ChatHeaderProps {
-  /** Display name of the active agent */
-  agentLabel: string;
-  /** Whether a plugin update is available */
-  isUpdateAvailable: boolean;
   /** Callback to create a new chat session */
   onNewChat: () => void;
   /** Callback to export the chat */
@@ -26,18 +22,13 @@ export interface ChatHeaderProps {
  * - Action buttons (new chat, export, settings)
  */
 export function ChatHeader({
-  agentLabel,
-  isUpdateAvailable,
   onNewChat,
   onExportChat,
   onOpenSettings,
 }: ChatHeaderProps) {
   return (
     <div className="chat-view-header">
-      <h3 className="chat-view-header-title">{agentLabel}</h3>
-      {isUpdateAvailable && (
-        <p className="chat-view-header-update">Update available!</p>
-      )}
+      <h3 className="chat-view-header-title">Note ACP</h3>
       <div className="chat-view-header-actions">
         <HeaderButton iconName="plus" tooltip="New chat" onClick={onNewChat} />
         <HeaderButton

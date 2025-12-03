@@ -26,8 +26,6 @@ export interface ChatMessagesProps {
   isSending: boolean;
   /** Whether the session is ready for user input */
   isSessionReady: boolean;
-  /** Display name of the active agent */
-  agentLabel: string;
   /** Error information (if any) */
   errorInfo: ErrorInfo | null;
   /** Plugin instance */
@@ -56,7 +54,6 @@ export function ChatMessages({
   messages,
   isSending,
   isSessionReady,
-  agentLabel,
   errorInfo,
   plugin,
   view,
@@ -133,8 +130,8 @@ export function ChatMessages({
       ) : messages.length === 0 ? (
         <div className="chat-empty-state">
           {!isSessionReady
-            ? `Connecting to ${agentLabel}...`
-            : `Start a conversation with ${agentLabel}...`}
+            ? "Connecting to agent..."
+            : "Start a conversation with agent..."}
         </div>
       ) : (
         <>

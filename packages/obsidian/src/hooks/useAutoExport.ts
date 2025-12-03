@@ -87,8 +87,6 @@ export function useAutoExport(plugin: AgentClientPlugin): UseAutoExportReturn {
 
         const filePath = await exporter.exportToMarkdown(
           messages,
-          session.agentDisplayName,
-          session.agentId,
           session.sessionId,
           session.createdAt,
           openFile,
