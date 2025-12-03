@@ -15,7 +15,6 @@ import { NoteMentionService } from "../../adapters/obsidian/mention-service";
 
 // Utility imports
 import { Logger } from "../../shared/logger";
-import { ChatExporter } from "../../shared/chat-exporter";
 
 // Adapter imports
 import { AcpAdapter, type IAcpClient } from "../../adapters/acp/acp.adapter";
@@ -29,7 +28,6 @@ import { useAutoMention } from "../../hooks/useAutoMention";
 import { useAgentSession } from "../../hooks/useAgentSession";
 import { useChat } from "../../hooks/useChat";
 import { usePermission } from "../../hooks/usePermission";
-import { useAutoExport } from "../../hooks/useAutoExport";
 
 // Type definitions for Obsidian internal APIs
 interface VaultAdapterWithBasePath {
@@ -123,8 +121,6 @@ function ChatComponent({
     autoMention.toggle,
   );
 
-  const autoExport = useAutoExport(plugin);
-
   // Combined error info (session errors take precedence)
   const errorInfo = sessionErrorInfo || chat.errorInfo || permission.errorInfo;
 
@@ -150,37 +146,10 @@ function ChatComponent({
 
     logger.log("[Debug] Creating new session...");
 
-    // Auto-export current chat before starting new one (if has messages)
-    if (messages.length > 0) {
-      await autoExport.autoExportIfEnabled("newChat", messages, session);
-    }
-
     autoMention.toggle(false);
     chat.clearMessages();
     await agentSession.restartSession();
-  }, [messages, session, logger, autoExport, autoMention, chat, agentSession]);
-
-  const handleExportChat = useCallback(async () => {
-    if (messages.length === 0) {
-      new Notice("[Agent Client] No messages to export");
-      return;
-    }
-
-    try {
-      const exporter = new ChatExporter(plugin);
-      const openFile = plugin.settings.exportSettings.openFileAfterExport;
-      const filePath = await exporter.exportToMarkdown(
-        messages,
-        session.sessionId || "unknown",
-        session.createdAt,
-        openFile,
-      );
-      new Notice(`[Agent Client] Chat exported to ${filePath}`);
-    } catch (error) {
-      new Notice("[Agent Client] Failed to export chat");
-      logger.error("Export error:", error);
-    }
-  }, [messages, session, plugin, logger]);
+  }, [messages, session, logger, autoMention, chat, agentSession]);
 
   const handleOpenSettings = useCallback(() => {
     const appWithSettings = plugin.app as unknown as AppWithSettings;
@@ -231,24 +200,17 @@ function ChatComponent({
   // Refs for cleanup (to access latest values in cleanup function)
   const messagesRef = useRef(messages);
   const sessionRef = useRef(session);
-  const autoExportRef = useRef(autoExport);
   const closeSessionRef = useRef(agentSession.closeSession);
   messagesRef.current = messages;
   sessionRef.current = session;
-  autoExportRef.current = autoExport;
   closeSessionRef.current = agentSession.closeSession;
 
-  // Cleanup on unmount only - auto-export and close session
+  // Cleanup on unmount only - close session
   useEffect(() => {
     return () => {
-      logger.log("[ChatView] Cleanup: auto-export and close session");
+      logger.log("[ChatView] Cleanup: close session");
       // Use refs to get latest values (avoid stale closures)
       void (async () => {
-        await autoExportRef.current.autoExportIfEnabled(
-          "closeChat",
-          messagesRef.current,
-          sessionRef.current,
-        );
         await closeSessionRef.current();
       })();
     };
@@ -388,7 +350,6 @@ function ChatComponent({
     <div className="chat-view-container">
       <ChatHeader
         onNewChat={() => void handleNewChat()}
-        onExportChat={() => void handleExportChat()}
         onOpenSettings={handleOpenSettings}
       />
 

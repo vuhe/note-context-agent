@@ -10,26 +10,12 @@ export interface AgentClientPluginSettings {
   autoAllowPermissions: boolean;
   autoMentionActiveNote: boolean;
   debugMode: boolean;
-  exportSettings: {
-    defaultFolder: string;
-    filenameTemplate: string;
-    autoExportOnNewChat: boolean;
-    autoExportOnCloseChat: boolean;
-    openFileAfterExport: boolean;
-  };
 }
 
 const DEFAULT_SETTINGS: AgentClientPluginSettings = {
   autoAllowPermissions: false,
   autoMentionActiveNote: true,
   debugMode: false,
-  exportSettings: {
-    defaultFolder: "Agent Client",
-    filenameTemplate: "agent_client_{date}_{time}",
-    autoExportOnNewChat: false,
-    autoExportOnCloseChat: false,
-    openFileAfterExport: true,
-  },
 };
 
 export default class AgentClientPlugin extends Plugin {
@@ -189,37 +175,6 @@ export default class AgentClientPlugin extends Plugin {
         typeof rawSettings.debugMode === "boolean"
           ? rawSettings.debugMode
           : DEFAULT_SETTINGS.debugMode,
-      exportSettings: (() => {
-        const rawExport = rawSettings.exportSettings as
-          | Record<string, unknown>
-          | null
-          | undefined;
-        if (rawExport && typeof rawExport === "object") {
-          return {
-            defaultFolder:
-              typeof rawExport.defaultFolder === "string"
-                ? rawExport.defaultFolder
-                : DEFAULT_SETTINGS.exportSettings.defaultFolder,
-            filenameTemplate:
-              typeof rawExport.filenameTemplate === "string"
-                ? rawExport.filenameTemplate
-                : DEFAULT_SETTINGS.exportSettings.filenameTemplate,
-            autoExportOnNewChat:
-              typeof rawExport.autoExportOnNewChat === "boolean"
-                ? rawExport.autoExportOnNewChat
-                : DEFAULT_SETTINGS.exportSettings.autoExportOnNewChat,
-            autoExportOnCloseChat:
-              typeof rawExport.autoExportOnCloseChat === "boolean"
-                ? rawExport.autoExportOnCloseChat
-                : DEFAULT_SETTINGS.exportSettings.autoExportOnCloseChat,
-            openFileAfterExport:
-              typeof rawExport.openFileAfterExport === "boolean"
-                ? rawExport.openFileAfterExport
-                : DEFAULT_SETTINGS.exportSettings.openFileAfterExport,
-          };
-        }
-        return DEFAULT_SETTINGS.exportSettings;
-      })(),
     };
   }
 

@@ -7,8 +7,6 @@ import { HeaderButton } from "./HeaderButton";
 export interface ChatHeaderProps {
   /** Callback to create a new chat session */
   onNewChat: () => void;
-  /** Callback to export the chat */
-  onExportChat: () => void;
   /** Callback to open settings */
   onOpenSettings: () => void;
 }
@@ -19,23 +17,14 @@ export interface ChatHeaderProps {
  * Displays:
  * - Agent name
  * - Update notification (if available)
- * - Action buttons (new chat, export, settings)
+ * - Action buttons (new chat, settings)
  */
-export function ChatHeader({
-  onNewChat,
-  onExportChat,
-  onOpenSettings,
-}: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, onOpenSettings }: ChatHeaderProps) {
   return (
     <div className="chat-view-header">
       <h3 className="chat-view-header-title">Note ACP</h3>
       <div className="chat-view-header-actions">
         <HeaderButton iconName="plus" tooltip="New chat" onClick={onNewChat} />
-        <HeaderButton
-          iconName="save"
-          tooltip="Export chat to Markdown"
-          onClick={onExportChat}
-        />
         <HeaderButton
           iconName="settings"
           tooltip="Settings"

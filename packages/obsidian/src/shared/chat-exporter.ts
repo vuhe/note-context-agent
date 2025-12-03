@@ -19,14 +19,12 @@ export class ChatExporter {
     sessionCreatedAt: Date,
     openFile = true,
   ): Promise<string> {
-    const settings = this.plugin.settings.exportSettings;
-
     // Use first message timestamp if available, fallback to session creation time
     const effectiveTimestamp =
       messages.length > 0 ? messages[0].timestamp : sessionCreatedAt;
 
     const fileName = this.generateFileName(effectiveTimestamp);
-    const folderPath = settings.defaultFolder || "Agent Client";
+    const folderPath = "Agent Client";
 
     // Create folder if it doesn't exist
     await this.ensureFolderExists(folderPath);
@@ -81,8 +79,7 @@ export class ChatExporter {
   }
 
   private generateFileName(timestamp: Date): string {
-    const settings = this.plugin.settings.exportSettings;
-    const template = settings.filenameTemplate || "agent_client_{date}_{time}";
+    const template = "agent_client_{date}_{time}";
 
     // Format date in local timezone: 20251115
     const year = timestamp.getFullYear();
