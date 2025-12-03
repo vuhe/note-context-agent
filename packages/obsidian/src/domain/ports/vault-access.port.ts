@@ -11,10 +11,10 @@
  * Line numbers are 0-indexed.
  */
 export interface EditorPosition {
-	/** Line number (0-indexed) */
-	line: number;
-	/** Character position within the line */
-	ch: number;
+  /** Line number (0-indexed) */
+  line: number;
+  /** Character position within the line */
+  ch: number;
 }
 
 /**
@@ -24,29 +24,29 @@ export interface EditorPosition {
  * exposing Obsidian's internal TFile structure.
  */
 export interface NoteMetadata {
-	/** Full path to the note within the vault (e.g., "folder/note.md") */
-	path: string;
+  /** Full path to the note within the vault (e.g., "folder/note.md") */
+  path: string;
 
-	/** Filename without extension (e.g., "note") */
-	name: string;
+  /** Filename without extension (e.g., "note") */
+  name: string;
 
-	/** File extension (usually "md") */
-	extension: string;
+  /** File extension (usually "md") */
+  extension: string;
 
-	/** Creation timestamp (milliseconds since epoch) */
-	created: number;
+  /** Creation timestamp (milliseconds since epoch) */
+  created: number;
 
-	/** Last modified timestamp (milliseconds since epoch) */
-	modified: number;
+  /** Last modified timestamp (milliseconds since epoch) */
+  modified: number;
 
-	/** Optional aliases from frontmatter */
-	aliases?: string[];
+  /** Optional aliases from frontmatter */
+  aliases?: string[];
 
-	/** Optional text selection range in the editor */
-	selection?: {
-		from: EditorPosition;
-		to: EditorPosition;
-	};
+  /** Optional text selection range in the editor */
+  selection?: {
+    from: EditorPosition;
+    to: EditorPosition;
+  };
 }
 
 /**
@@ -57,38 +57,38 @@ export interface NoteMetadata {
  * that use Obsidian's Vault API, NoteMentionService, etc.
  */
 export interface IVaultAccess {
-	/**
-	 * Read the content of a note.
-	 *
-	 * @param path - Path to the note within the vault
-	 * @returns Promise resolving to note content as plain text
-	 * @throws Error if note doesn't exist or cannot be read
-	 */
-	readNote(path: string): Promise<string>;
+  /**
+   * Read the content of a note.
+   *
+   * @param path - Path to the note within the vault
+   * @returns Promise resolving to note content as plain text
+   * @throws Error if note doesn't exist or cannot be read
+   */
+  readNote(path: string): Promise<string>;
 
-	/**
-	 * Search for notes matching a query.
-	 *
-	 * Uses fuzzy search against note names, paths, and aliases.
-	 * Returns up to 5 best matches sorted by relevance.
-	 * If query is empty, returns recently modified files.
-	 *
-	 * @param query - Search query string (can be empty for recent files)
-	 * @returns Promise resolving to array of matching note metadata
-	 */
-	searchNotes(query: string): Promise<NoteMetadata[]>;
+  /**
+   * Search for notes matching a query.
+   *
+   * Uses fuzzy search against note names, paths, and aliases.
+   * Returns up to 5 best matches sorted by relevance.
+   * If query is empty, returns recently modified files.
+   *
+   * @param query - Search query string (can be empty for recent files)
+   * @returns Promise resolving to array of matching note metadata
+   */
+  searchNotes(query: string): Promise<NoteMetadata[]>;
 
-	/**
-	 * Get the currently active note in the editor.
-	 *
-	 * @returns Promise resolving to active note metadata, or null if no note is active
-	 */
-	getActiveNote(): Promise<NoteMetadata | null>;
+  /**
+   * Get the currently active note in the editor.
+   *
+   * @returns Promise resolving to active note metadata, or null if no note is active
+   */
+  getActiveNote(): Promise<NoteMetadata | null>;
 
-	/**
-	 * List all markdown notes in the vault.
-	 *
-	 * @returns Promise resolving to array of all note metadata
-	 */
-	listNotes(): Promise<NoteMetadata[]>;
+  /**
+   * List all markdown notes in the vault.
+   *
+   * @returns Promise resolving to array of all note metadata
+   */
+  listNotes(): Promise<NoteMetadata[]>;
 }

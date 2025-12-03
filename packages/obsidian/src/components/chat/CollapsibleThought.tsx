@@ -4,29 +4,29 @@ import type AgentClientPlugin from "../../plugin";
 import { MarkdownTextRenderer } from "./MarkdownTextRenderer";
 
 interface CollapsibleThoughtProps {
-	text: string;
-	plugin: AgentClientPlugin;
+  text: string;
+  plugin: AgentClientPlugin;
 }
 
 export function CollapsibleThought({ text, plugin }: CollapsibleThoughtProps) {
-	const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-	return (
-		<div
-			className="collapsible-thought"
-			onClick={() => setIsExpanded(!isExpanded)}
-		>
-			<div className="collapsible-thought-header">
-				💡Thinking
-				<span className="collapsible-thought-icon">
-					{isExpanded ? "▼" : "▶"}
-				</span>
-			</div>
-			{isExpanded && (
-				<div className="collapsible-thought-content">
-					<MarkdownTextRenderer text={text} app={plugin.app} />
-				</div>
-			)}
-		</div>
-	);
+  return (
+    <div
+      className="collapsible-thought"
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="collapsible-thought-header">
+        💡Thinking
+        <span className="collapsible-thought-icon">
+          {isExpanded ? "▼" : "▶"}
+        </span>
+      </div>
+      {isExpanded && (
+        <div className="collapsible-thought-content">
+          <MarkdownTextRenderer text={text} app={plugin.app} />
+        </div>
+      )}
+    </div>
+  );
 }

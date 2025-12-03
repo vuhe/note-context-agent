@@ -6,17 +6,17 @@
  * @returns Directory path, or null if cannot be determined
  */
 export function resolveCommandDirectory(command: string): string | null {
-	if (!command) {
-		return null;
-	}
-	const lastSlash = Math.max(
-		command.lastIndexOf("/"),
-		command.lastIndexOf("\\"),
-	);
-	if (lastSlash <= 0) {
-		return null;
-	}
-	return command.slice(0, lastSlash);
+  if (!command) {
+    return null;
+  }
+  const lastSlash = Math.max(
+    command.lastIndexOf("/"),
+    command.lastIndexOf("\\"),
+  );
+  if (lastSlash <= 0) {
+    return null;
+  }
+  return command.slice(0, lastSlash);
 }
 
 /**
@@ -28,12 +28,12 @@ export function resolveCommandDirectory(command: string): string | null {
  * @returns Relative path if under basePath, otherwise absolute path
  */
 export function toRelativePath(absolutePath: string, basePath: string): string {
-	// Normalize paths (remove trailing slashes)
-	const normalizedBase = basePath.replace(/\/+$/, "");
-	const normalizedPath = absolutePath.replace(/\/+$/, "");
+  // Normalize paths (remove trailing slashes)
+  const normalizedBase = basePath.replace(/\/+$/, "");
+  const normalizedPath = absolutePath.replace(/\/+$/, "");
 
-	if (normalizedPath.startsWith(normalizedBase + "/")) {
-		return normalizedPath.slice(normalizedBase.length + 1);
-	}
-	return absolutePath;
+  if (normalizedPath.startsWith(normalizedBase + "/")) {
+    return normalizedPath.slice(normalizedBase.length + 1);
+  }
+  return absolutePath;
 }

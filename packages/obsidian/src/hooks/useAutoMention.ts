@@ -1,26 +1,26 @@
 import { useState, useCallback } from "react";
 import type {
-	NoteMetadata,
-	IVaultAccess,
+  NoteMetadata,
+  IVaultAccess,
 } from "../domain/ports/vault-access.port";
 
 export interface UseAutoMentionReturn {
-	/** Currently active note for auto-mention */
-	activeNote: NoteMetadata | null;
-	/** Whether auto-mention is temporarily disabled */
-	isDisabled: boolean;
+  /** Currently active note for auto-mention */
+  activeNote: NoteMetadata | null;
+  /** Whether auto-mention is temporarily disabled */
+  isDisabled: boolean;
 
-	/**
-	 * Toggle auto-mention enabled/disabled state.
-	 * @param disabled - If provided, set to this value. If omitted, toggle current state.
-	 */
-	toggle: (disabled?: boolean) => void;
+  /**
+   * Toggle auto-mention enabled/disabled state.
+   * @param disabled - If provided, set to this value. If omitted, toggle current state.
+   */
+  toggle: (disabled?: boolean) => void;
 
-	/**
-	 * Update the active note from the vault.
-	 * Should be called when the active file changes.
-	 */
-	updateActiveNote: () => Promise<void>;
+  /**
+   * Update the active note from the vault.
+   * Should be called when the active file changes.
+   */
+  updateActiveNote: () => Promise<void>;
 }
 
 /**
@@ -33,30 +33,30 @@ export interface UseAutoMentionReturn {
  * @param vaultAccess - Vault access port for getting the active note
  */
 export function useAutoMention(
-	vaultAccess: IVaultAccess,
+  vaultAccess: IVaultAccess,
 ): UseAutoMentionReturn {
-	const [activeNote, setActiveNote] = useState<NoteMetadata | null>(null);
-	const [isDisabled, setIsDisabled] = useState(false);
+  const [activeNote, setActiveNote] = useState<NoteMetadata | null>(null);
+  const [isDisabled, setIsDisabled] = useState(false);
 
-	const toggle = useCallback((disabled?: boolean) => {
-		if (disabled === undefined) {
-			// Toggle current state
-			setIsDisabled((prev) => !prev);
-		} else {
-			// Set to specific value
-			setIsDisabled(disabled);
-		}
-	}, []);
+  const toggle = useCallback((disabled?: boolean) => {
+    if (disabled === undefined) {
+      // Toggle current state
+      setIsDisabled((prev) => !prev);
+    } else {
+      // Set to specific value
+      setIsDisabled(disabled);
+    }
+  }, []);
 
-	const updateActiveNote = useCallback(async () => {
-		const note = await vaultAccess.getActiveNote();
-		setActiveNote(note);
-	}, [vaultAccess]);
+  const updateActiveNote = useCallback(async () => {
+    const note = await vaultAccess.getActiveNote();
+    setActiveNote(note);
+  }, [vaultAccess]);
 
-	return {
-		activeNote,
-		isDisabled,
-		toggle,
-		updateActiveNote,
-	};
+  return {
+    activeNote,
+    isDisabled,
+    toggle,
+    updateActiveNote,
+  };
 }

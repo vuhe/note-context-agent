@@ -23,86 +23,86 @@ type Listener = () => void;
  * Pattern: Observer/Publisher-Subscriber
  */
 export class SettingsStore implements ISettingsAccess {
-	/** Current settings state */
-	private state: AgentClientPluginSettings;
+  /** Current settings state */
+  private state: AgentClientPluginSettings;
 
-	/** Set of registered listeners */
-	private listeners = new Set<Listener>();
+  /** Set of registered listeners */
+  private listeners = new Set<Listener>();
 
-	/** Plugin instance for persistence */
-	private plugin: AgentClientPlugin;
+  /** Plugin instance for persistence */
+  private plugin: AgentClientPlugin;
 
-	/**
-	 * Create a new settings store.
-	 *
-	 * @param initial - Initial settings state
-	 * @param plugin - Plugin instance for saving settings
-	 */
-	constructor(initial: AgentClientPluginSettings, plugin: AgentClientPlugin) {
-		this.state = initial;
-		this.plugin = plugin;
-	}
+  /**
+   * Create a new settings store.
+   *
+   * @param initial - Initial settings state
+   * @param plugin - Plugin instance for saving settings
+   */
+  constructor(initial: AgentClientPluginSettings, plugin: AgentClientPlugin) {
+    this.state = initial;
+    this.plugin = plugin;
+  }
 
-	/**
-	 * Get current settings snapshot.
-	 *
-	 * Used by React's useSyncExternalStore to read current state.
-	 *
-	 * @returns Current plugin settings
-	 */
-	getSnapshot = (): AgentClientPluginSettings => this.state;
+  /**
+   * Get current settings snapshot.
+   *
+   * Used by React's useSyncExternalStore to read current state.
+   *
+   * @returns Current plugin settings
+   */
+  getSnapshot = (): AgentClientPluginSettings => this.state;
 
-	/**
-	 * Update plugin settings.
-	 *
-	 * Merges the provided updates with existing settings, notifies subscribers,
-	 * and persists changes to disk.
-	 *
-	 * @param updates - Partial settings object with properties to update
-	 * @returns Promise that resolves when settings are saved
-	 */
-	async updateSettings(
-		updates: Partial<AgentClientPluginSettings>,
-	): Promise<void> {
-		const next = { ...this.state, ...updates };
-		this.state = next;
+  /**
+   * Update plugin settings.
+   *
+   * Merges the provided updates with existing settings, notifies subscribers,
+   * and persists changes to disk.
+   *
+   * @param updates - Partial settings object with properties to update
+   * @returns Promise that resolves when settings are saved
+   */
+  async updateSettings(
+    updates: Partial<AgentClientPluginSettings>,
+  ): Promise<void> {
+    const next = { ...this.state, ...updates };
+    this.state = next;
 
-		// Notify all subscribers
-		for (const listener of this.listeners) {
-			listener();
-		}
+    // Notify all subscribers
+    for (const listener of this.listeners) {
+      listener();
+    }
 
-		// Persist to disk
-		await this.plugin.saveSettings();
-	}
+    // Persist to disk
+    await this.plugin.saveSettings();
+  }
 
-	/**
-	 * Subscribe to settings changes.
-	 *
-	 * The listener will be called whenever settings are updated via updateSettings().
-	 * Used by React's useSyncExternalStore to detect changes.
-	 *
-	 * @param listener - Callback to invoke on settings changes
-	 * @returns Unsubscribe function to remove the listener
-	 */
-	subscribe = (listener: Listener): (() => void) => {
-		this.listeners.add(listener);
-		return () => this.listeners.delete(listener);
-	};
+  /**
+   * Subscribe to settings changes.
+   *
+   * The listener will be called whenever settings are updated via updateSettings().
+   * Used by React's useSyncExternalStore to detect changes.
+   *
+   * @param listener - Callback to invoke on settings changes
+   * @returns Unsubscribe function to remove the listener
+   */
+  subscribe = (listener: Listener): (() => void) => {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  };
 
-	/**
-	 * Set entire settings object (legacy method).
-	 *
-	 * For backward compatibility with existing code.
-	 * Delegates to updateSettings() for async persistence.
-	 *
-	 * @param next - New settings object
-	 */
-	set(next: AgentClientPluginSettings): void {
-		// Delegate to async updateSettings
-		// Note: Fire-and-forget - callers don't expect this to be async
-		void this.updateSettings(next);
-	}
+  /**
+   * Set entire settings object (legacy method).
+   *
+   * For backward compatibility with existing code.
+   * Delegates to updateSettings() for async persistence.
+   *
+   * @param next - New settings object
+   */
+  set(next: AgentClientPluginSettings): void {
+    // Delegate to async updateSettings
+    // Note: Fire-and-forget - callers don't expect this to be async
+    void this.updateSettings(next);
+  }
 }
 
 /**
@@ -115,6 +115,6 @@ export class SettingsStore implements ISettingsAccess {
  * @returns New SettingsStore instance
  */
 export const createSettingsStore = (
-	initial: AgentClientPluginSettings,
-	plugin: AgentClientPlugin,
+  initial: AgentClientPluginSettings,
+  plugin: AgentClientPlugin,
 ) => new SettingsStore(initial, plugin);

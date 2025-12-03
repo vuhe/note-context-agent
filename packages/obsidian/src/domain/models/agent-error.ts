@@ -24,14 +24,14 @@
  * - unknown: Uncategorized or unexpected errors
  */
 export type AgentErrorCategory =
-	| "connection"
-	| "authentication"
-	| "configuration"
-	| "communication"
-	| "permission"
-	| "timeout"
-	| "rate_limit"
-	| "unknown";
+  | "connection"
+  | "authentication"
+  | "configuration"
+  | "communication"
+  | "permission"
+  | "timeout"
+  | "rate_limit"
+  | "unknown";
 
 /**
  * Severity level of an error.
@@ -55,14 +55,14 @@ export type AgentErrorSeverity = "error" | "warning" | "info";
  * - Optional suggestion for resolution
  */
 export interface ErrorInfo {
-	/** Short, user-friendly error title */
-	title: string;
+  /** Short, user-friendly error title */
+  title: string;
 
-	/** Detailed error message explaining what went wrong */
-	message: string;
+  /** Detailed error message explaining what went wrong */
+  message: string;
 
-	/** Optional suggestion on how to resolve the error */
-	suggestion?: string;
+  /** Optional suggestion on how to resolve the error */
+  suggestion?: string;
 }
 
 /**
@@ -73,27 +73,27 @@ export interface ErrorInfo {
  * and provide detailed diagnostics.
  */
 export interface AgentError extends ErrorInfo {
-	/** Unique identifier for this error occurrence */
-	id: string;
+  /** Unique identifier for this error occurrence */
+  id: string;
 
-	/** Error category for classification */
-	category: AgentErrorCategory;
+  /** Error category for classification */
+  category: AgentErrorCategory;
 
-	/** Severity level */
-	severity: AgentErrorSeverity;
+  /** Severity level */
+  severity: AgentErrorSeverity;
 
-	/** Timestamp when the error occurred */
-	occurredAt: Date;
+  /** Timestamp when the error occurred */
+  occurredAt: Date;
 
-	/** ID of the agent where the error occurred (if applicable) */
-	agentId?: string;
+  /** ID of the agent where the error occurred (if applicable) */
+  agentId?: string;
 
-	/** Session ID where the error occurred (null if no session) */
-	sessionId?: string | null;
+  /** Session ID where the error occurred (null if no session) */
+  sessionId?: string | null;
 
-	/** Error code from the underlying system/protocol (if available) */
-	code?: string | number;
+  /** Error code from the underlying system/protocol (if available) */
+  code?: string | number;
 
-	/** Original error object for debugging (not shown to users) */
-	originalError?: unknown;
+  /** Original error object for debugging (not shown to users) */
+  originalError?: unknown;
 }

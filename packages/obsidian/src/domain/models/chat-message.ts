@@ -27,16 +27,16 @@ export type ToolCallStatus = "pending" | "in_progress" | "completed" | "failed";
  * Categories of tool operations.
  */
 export type ToolKind =
-	| "read" // Reading files or data
-	| "edit" // Modifying existing content
-	| "delete" // Removing files or data
-	| "move" // Moving or renaming
-	| "search" // Searching through content
-	| "execute" // Running commands or scripts
-	| "think" // Agent reasoning/planning
-	| "fetch" // Fetching external resources
-	| "switch_mode" // Changing operation mode
-	| "other"; // Other operations
+  | "read" // Reading files or data
+  | "edit" // Modifying existing content
+  | "delete" // Removing files or data
+  | "move" // Moving or renaming
+  | "search" // Searching through content
+  | "execute" // Running commands or scripts
+  | "think" // Agent reasoning/planning
+  | "fetch" // Fetching external resources
+  | "switch_mode" // Changing operation mode
+  | "other"; // Other operations
 
 // ============================================================================
 // Tool Call Content Types
@@ -52,18 +52,18 @@ export type ToolCallContent = DiffContent | TerminalContent;
  * Represents a file modification with before/after content.
  */
 export interface DiffContent {
-	type: "diff";
-	path: string;
-	newText: string;
-	oldText?: string | null; // null or undefined for new files
+  type: "diff";
+  path: string;
+  newText: string;
+  oldText?: string | null; // null or undefined for new files
 }
 
 /**
  * Reference to a terminal session created by a tool call.
  */
 export interface TerminalContent {
-	type: "terminal";
-	terminalId: string;
+  type: "terminal";
+  terminalId: string;
 }
 
 // ============================================================================
@@ -74,26 +74,26 @@ export interface TerminalContent {
  * Location information for tool operations (e.g., which file/line was affected).
  */
 export interface ToolCallLocation {
-	path: string;
-	line?: number | null; // null if the entire file is affected
+  path: string;
+  line?: number | null; // null if the entire file is affected
 }
 
 /**
  * User's choice for permission requests.
  */
 export interface PermissionOption {
-	optionId: string;
-	name: string;
-	kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
+  optionId: string;
+  name: string;
+  kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
 }
 
 /**
  * Entry in an agent's plan/task list.
  */
 export interface PlanEntry {
-	content: string;
-	status: "pending" | "in_progress" | "completed";
-	priority: "high" | "medium" | "low";
+  content: string;
+  status: "pending" | "in_progress" | "completed";
+  priority: "high" | "medium" | "low";
 }
 
 /**
@@ -101,14 +101,14 @@ export interface PlanEntry {
  * Used in permission requests to show what operation is being requested.
  */
 export interface ToolCallUpdate {
-	toolCallId: string;
-	title?: string | null;
-	status?: ToolCallStatus | null;
-	kind?: ToolKind | null;
-	content?: ToolCallContent[] | null;
-	locations?: ToolCallLocation[] | null;
-	rawInput?: { [k: string]: unknown }; // Tool's input parameters
-	rawOutput?: { [k: string]: unknown }; // Tool's output data
+  toolCallId: string;
+  title?: string | null;
+  status?: ToolCallStatus | null;
+  kind?: ToolKind | null;
+  content?: ToolCallContent[] | null;
+  locations?: ToolCallLocation[] | null;
+  rawInput?: { [k: string]: unknown }; // Tool's input parameters
+  rawOutput?: { [k: string]: unknown }; // Tool's output data
 }
 
 // ============================================================================
@@ -122,10 +122,10 @@ export interface ToolCallUpdate {
  * (text, images, tool calls, etc.) to represent rich conversations.
  */
 export interface ChatMessage {
-	id: string;
-	role: Role;
-	content: MessageContent[];
-	timestamp: Date;
+  id: string;
+  role: Role;
+  content: MessageContent[];
+  timestamp: Date;
 }
 
 /**
@@ -141,63 +141,63 @@ export interface ChatMessage {
  * - terminal: Reference to a terminal session
  */
 export type MessageContent =
-	| {
-			type: "text";
-			text: string;
-	}
-	| {
-			type: "text_with_context";
-			text: string;
-			autoMentionContext?: {
-				noteName: string;
-				notePath: string;
-				selection?: {
-					fromLine: number;
-					toLine: number;
-				};
-			};
-	}
-	| {
-			type: "agent_thought";
-			text: string;
-	}
-	| {
-			type: "image";
-			data: string; // Base64 encoded image data
-			mimeType: string; // e.g., "image/png"
-			uri?: string; // Optional source URI
-	}
-	| {
-			type: "tool_call";
-			toolCallId: string;
-			title?: string | null;
-			status: ToolCallStatus;
-			kind?: ToolKind;
-			content?: ToolCallContent[];
-			locations?: ToolCallLocation[];
-			rawInput?: { [k: string]: unknown };
-			rawOutput?: { [k: string]: unknown };
-			permissionRequest?: {
-				requestId: string;
-				options: PermissionOption[];
-				selectedOptionId?: string;
-				isCancelled?: boolean;
-				isActive?: boolean;
-			};
-	}
-	| {
-			type: "plan";
-			entries: PlanEntry[];
-	}
-	| {
-			type: "permission_request";
-			toolCall: ToolCallUpdate;
-			options: PermissionOption[];
-			selectedOptionId?: string;
-			isCancelled?: boolean;
-			isActive?: boolean;
-	}
-	| {
-			type: "terminal";
-			terminalId: string;
-	};
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "text_with_context";
+      text: string;
+      autoMentionContext?: {
+        noteName: string;
+        notePath: string;
+        selection?: {
+          fromLine: number;
+          toLine: number;
+        };
+      };
+    }
+  | {
+      type: "agent_thought";
+      text: string;
+    }
+  | {
+      type: "image";
+      data: string; // Base64 encoded image data
+      mimeType: string; // e.g., "image/png"
+      uri?: string; // Optional source URI
+    }
+  | {
+      type: "tool_call";
+      toolCallId: string;
+      title?: string | null;
+      status: ToolCallStatus;
+      kind?: ToolKind;
+      content?: ToolCallContent[];
+      locations?: ToolCallLocation[];
+      rawInput?: { [k: string]: unknown };
+      rawOutput?: { [k: string]: unknown };
+      permissionRequest?: {
+        requestId: string;
+        options: PermissionOption[];
+        selectedOptionId?: string;
+        isCancelled?: boolean;
+        isActive?: boolean;
+      };
+    }
+  | {
+      type: "plan";
+      entries: PlanEntry[];
+    }
+  | {
+      type: "permission_request";
+      toolCall: ToolCallUpdate;
+      options: PermissionOption[];
+      selectedOptionId?: string;
+      isCancelled?: boolean;
+      isActive?: boolean;
+    }
+  | {
+      type: "terminal";
+      terminalId: string;
+    };

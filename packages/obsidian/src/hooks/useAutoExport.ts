@@ -14,36 +14,36 @@ import type AgentClientPlugin from "../plugin";
  * Export settings from plugin settings.
  */
 export interface ExportSettings {
-	autoExportOnNewChat: boolean;
-	autoExportOnCloseChat: boolean;
-	openFileAfterExport: boolean;
+  autoExportOnNewChat: boolean;
+  autoExportOnCloseChat: boolean;
+  openFileAfterExport: boolean;
 }
 
 /**
  * Return type for useAutoExport hook.
  */
 export interface UseAutoExportReturn {
-	/**
-	 * Export chat if auto-export is enabled for the given trigger.
-	 * @param trigger - What triggered the export ("newChat" or "closeChat")
-	 * @param messages - Current messages to export
-	 * @param session - Current session info
-	 */
-	autoExportIfEnabled: (
-		trigger: "newChat" | "closeChat",
-		messages: ChatMessage[],
-		session: ChatSession,
-	) => Promise<void>;
+  /**
+   * Export chat if auto-export is enabled for the given trigger.
+   * @param trigger - What triggered the export ("newChat" or "closeChat")
+   * @param messages - Current messages to export
+   * @param session - Current session info
+   */
+  autoExportIfEnabled: (
+    trigger: "newChat" | "closeChat",
+    messages: ChatMessage[],
+    session: ChatSession,
+  ) => Promise<void>;
 
-	/**
-	 * Manually export chat (always exports, ignores auto-export settings).
-	 * @param messages - Messages to export
-	 * @param session - Session info
-	 */
-	exportChat: (
-		messages: ChatMessage[],
-		session: ChatSession,
-	) => Promise<string | null>;
+  /**
+   * Manually export chat (always exports, ignores auto-export settings).
+   * @param messages - Messages to export
+   * @param session - Session info
+   */
+  exportChat: (
+    messages: ChatMessage[],
+    session: ChatSession,
+  ) => Promise<string | null>;
 }
 
 // ============================================================================
@@ -61,104 +61,101 @@ export interface UseAutoExportReturn {
  * @param plugin - Plugin instance for settings and exporter
  */
 export function useAutoExport(plugin: AgentClientPlugin): UseAutoExportReturn {
-	const loggerRef = useRef(new Logger(plugin));
+  const loggerRef = useRef(new Logger(plugin));
 
-	/**
-	 * Export chat to markdown file.
-	 */
-	const exportChat = useCallback(
-		async (
-			messages: ChatMessage[],
-			session: ChatSession,
-		): Promise<string | null> => {
-			// Skip if no messages to export
-			if (messages.length === 0) {
-				return null;
-			}
+  /**
+   * Export chat to markdown file.
+   */
+  const exportChat = useCallback(
+    async (
+      messages: ChatMessage[],
+      session: ChatSession,
+    ): Promise<string | null> => {
+      // Skip if no messages to export
+      if (messages.length === 0) {
+        return null;
+      }
 
-			// Skip if no session ID
-			if (!session.sessionId) {
-				return null;
-			}
+      // Skip if no session ID
+      if (!session.sessionId) {
+        return null;
+      }
 
-			try {
-				const exporter = new ChatExporter(plugin);
-				const openFile =
-					plugin.settings.exportSettings.openFileAfterExport;
+      try {
+        const exporter = new ChatExporter(plugin);
+        const openFile = plugin.settings.exportSettings.openFileAfterExport;
 
-				const filePath = await exporter.exportToMarkdown(
-					messages,
-					session.agentDisplayName,
-					session.agentId,
-					session.sessionId,
-					session.createdAt,
-					openFile,
-				);
+        const filePath = await exporter.exportToMarkdown(
+          messages,
+          session.agentDisplayName,
+          session.agentId,
+          session.sessionId,
+          session.createdAt,
+          openFile,
+        );
 
-				return filePath;
-			} catch (error) {
-				loggerRef.current.error("Export failed:", error);
-				throw error;
-			}
-		},
-		[plugin],
-	);
+        return filePath;
+      } catch (error) {
+        loggerRef.current.error("Export failed:", error);
+        throw error;
+      }
+    },
+    [plugin],
+  );
 
-	/**
-	 * Auto-export if enabled for the given trigger.
-	 */
-	const autoExportIfEnabled = useCallback(
-		async (
-			trigger: "newChat" | "closeChat",
-			messages: ChatMessage[],
-			session: ChatSession,
-		): Promise<void> => {
-			// Check the appropriate setting based on trigger
-			const isEnabled =
-				trigger === "newChat"
-					? plugin.settings.exportSettings.autoExportOnNewChat
-					: plugin.settings.exportSettings.autoExportOnCloseChat;
+  /**
+   * Auto-export if enabled for the given trigger.
+   */
+  const autoExportIfEnabled = useCallback(
+    async (
+      trigger: "newChat" | "closeChat",
+      messages: ChatMessage[],
+      session: ChatSession,
+    ): Promise<void> => {
+      // Check the appropriate setting based on trigger
+      const isEnabled =
+        trigger === "newChat"
+          ? plugin.settings.exportSettings.autoExportOnNewChat
+          : plugin.settings.exportSettings.autoExportOnCloseChat;
 
-			// Skip if auto-export is disabled for this trigger
-			if (!isEnabled) {
-				return;
-			}
+      // Skip if auto-export is disabled for this trigger
+      if (!isEnabled) {
+        return;
+      }
 
-			// Skip if no messages to export
-			if (messages.length === 0) {
-				return;
-			}
+      // Skip if no messages to export
+      if (messages.length === 0) {
+        return;
+      }
 
-			// Skip if no session ID
-			if (!session.sessionId) {
-				return;
-			}
+      // Skip if no session ID
+      if (!session.sessionId) {
+        return;
+      }
 
-			try {
-				const filePath = await exportChat(messages, session);
+      try {
+        const filePath = await exportChat(messages, session);
 
-				if (filePath) {
-					// Show success notification
-					new Notice(`[Agent Client] Chat exported to ${filePath}`);
+        if (filePath) {
+          // Show success notification
+          new Notice(`[Agent Client] Chat exported to ${filePath}`);
 
-					// Log success
-					const context =
-						trigger === "newChat" ? "new session" : "closing chat";
-					loggerRef.current.log(
-						`Chat auto-exported before ${context}`,
-					);
-				}
-			} catch {
-				// Show error notification
-				new Notice("[Agent Client] Failed to export chat");
-				// Error already logged in exportChat
-			}
-		},
-		[plugin, exportChat],
-	);
+          // Log success
+          const context =
+            trigger === "newChat" ? "new session" : "closing chat";
+          loggerRef.current.log(`Chat auto-exported before ${context}`);
+        }
+      } catch {
+        // Show error notification
+        new Notice("[Agent Client] Failed to export chat");
+        // Error already logged in exportChat
+      }
+    },
+    [plugin, exportChat],
+  );
 
-	return {
-		autoExportIfEnabled,
-		exportChat,
-	};
+  return {
+    autoExportIfEnabled,
+    exportChat,
+  };
 }

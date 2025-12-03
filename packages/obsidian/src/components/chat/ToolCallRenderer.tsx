@@ -9,105 +9,97 @@ import { toRelativePath } from "../../shared/path-utils";
 // import { MarkdownTextRenderer } from "./MarkdownTextRenderer";
 
 interface ToolCallRendererProps {
-	content: Extract<MessageContent, { type: "tool_call" }>;
-	plugin: AgentClientPlugin;
-	acpClient?: IAcpClient;
-	/** Callback to approve a permission request */
-	onApprovePermission?: (
-		requestId: string,
-		optionId: string,
-	) => Promise<void>;
+  content: Extract<MessageContent, { type: "tool_call" }>;
+  plugin: AgentClientPlugin;
+  acpClient?: IAcpClient;
+  /** Callback to approve a permission request */
+  onApprovePermission?: (requestId: string, optionId: string) => Promise<void>;
 }
 
 export function ToolCallRenderer({
-	content,
-	plugin,
-	acpClient,
-	onApprovePermission,
+  content,
+  plugin,
+  acpClient,
+  onApprovePermission,
 }: ToolCallRendererProps) {
-	const {
-		kind,
-		title,
-		status,
-		toolCallId,
-		permissionRequest,
-		locations,
-		// rawInput,
-		content: toolContent,
-	} = content;
+  const {
+    kind,
+    title,
+    status,
+    toolCallId,
+    permissionRequest,
+    locations,
+    // rawInput,
+    content: toolContent,
+  } = content;
 
-	// Local state for selected option (for immediate UI feedback)
-	const [selectedOptionId, setSelectedOptionId] = useState<
-		string | undefined
-	>(permissionRequest?.selectedOptionId);
+  // Local state for selected option (for immediate UI feedback)
+  const [selectedOptionId, setSelectedOptionId] = useState<string | undefined>(
+    permissionRequest?.selectedOptionId,
+  );
 
-	// Update selectedOptionId when permissionRequest changes
-	React.useEffect(() => {
-		if (permissionRequest?.selectedOptionId !== selectedOptionId) {
-			setSelectedOptionId(permissionRequest?.selectedOptionId);
-		}
-	}, [permissionRequest?.selectedOptionId]);
+  // Update selectedOptionId when permissionRequest changes
+  React.useEffect(() => {
+    if (permissionRequest?.selectedOptionId !== selectedOptionId) {
+      setSelectedOptionId(permissionRequest?.selectedOptionId);
+    }
+  }, [permissionRequest?.selectedOptionId]);
 
-	// Get vault path for relative path display
-	const vaultPath = useMemo(() => {
-		const adapter = plugin.app.vault.adapter as { basePath?: string };
-		return adapter.basePath || "";
-	}, [plugin]);
+  // Get vault path for relative path display
+  const vaultPath = useMemo(() => {
+    const adapter = plugin.app.vault.adapter as { basePath?: string };
+    return adapter.basePath || "";
+  }, [plugin]);
 
-	// Get icon based on kind
-	const getKindIcon = (kind?: string) => {
-		switch (kind) {
-			case "read":
-				return "📖";
-			case "edit":
-				return "✏️";
-			case "delete":
-				return "🗑️";
-			case "move":
-				return "📦";
-			case "search":
-				return "🔍";
-			case "execute":
-				return "💻";
-			case "think":
-				return "💭";
-			case "fetch":
-				return "🌐";
-			case "switch_mode":
-				return "🔄";
-			default:
-				return "🔧";
-		}
-	};
+  // Get icon based on kind
+  const getKindIcon = (kind?: string) => {
+    switch (kind) {
+      case "read":
+        return "📖";
+      case "edit":
+        return "✏️";
+      case "delete":
+        return "🗑️";
+      case "move":
+        return "📦";
+      case "search":
+        return "🔍";
+      case "execute":
+        return "💻";
+      case "think":
+        return "💭";
+      case "fetch":
+        return "🌐";
+      case "switch_mode":
+        return "🔄";
+      default:
+        return "🔧";
+    }
+  };
 
-	return (
-		<div className="message-tool-call">
-			{/* Header */}
-			<div className="message-tool-call-header">
-				<div className="message-tool-call-title">
-					<span className="message-tool-call-icon">
-						{getKindIcon(kind)}
-					</span>
-					{title}
-				</div>
-				{locations && locations.length > 0 && (
-					<div className="message-tool-call-locations">
-						{locations.map((loc, idx) => (
-							<span
-								key={idx}
-								className="message-tool-call-location"
-							>
-								{toRelativePath(loc.path, vaultPath)}
-								{loc.line != null && `:${loc.line}`}
-							</span>
-						))}
-					</div>
-				)}
-				<div className="message-tool-call-status">Status: {status}</div>
-			</div>
+  return (
+    <div className="message-tool-call">
+      {/* Header */}
+      <div className="message-tool-call-header">
+        <div className="message-tool-call-title">
+          <span className="message-tool-call-icon">{getKindIcon(kind)}</span>
+          {title}
+        </div>
+        {locations && locations.length > 0 && (
+          <div className="message-tool-call-locations">
+            {locations.map((loc, idx) => (
+              <span key={idx} className="message-tool-call-location">
+                {toRelativePath(loc.path, vaultPath)}
+                {loc.line != null && `:${loc.line}`}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="message-tool-call-status">Status: {status}</div>
+      </div>
 
-			{/* Kind-specific details */}
-			{/* kind && (
+      {/* Kind-specific details */}
+      {/* kind && (
 				<div className="message-tool-call-details">
 					<ToolCallDetails
 						kind={kind}
@@ -118,29 +110,23 @@ export function ToolCallRenderer({
 				</div>
 			)*/}
 
-			{/* Tool call content (diffs, terminal output, etc.) */}
-			{toolContent &&
-				toolContent.map((item, index) => {
-					if (item.type === "terminal") {
-						return (
-							<TerminalRenderer
-								key={index}
-								terminalId={item.terminalId}
-								acpClient={acpClient || null}
-								plugin={plugin}
-							/>
-						);
-					}
-					if (item.type === "diff") {
-						return (
-							<DiffRenderer
-								key={index}
-								diff={item}
-								plugin={plugin}
-							/>
-						);
-					}
-					/*
+      {/* Tool call content (diffs, terminal output, etc.) */}
+      {toolContent &&
+        toolContent.map((item, index) => {
+          if (item.type === "terminal") {
+            return (
+              <TerminalRenderer
+                key={index}
+                terminalId={item.terminalId}
+                acpClient={acpClient || null}
+                plugin={plugin}
+              />
+            );
+          }
+          if (item.type === "diff") {
+            return <DiffRenderer key={index} diff={item} plugin={plugin} />;
+          }
+          /*
 					if (item.type === "content") {
 						// Handle content blocks (text, image, etc.)
 						if ("text" in item.content) {
@@ -154,24 +140,24 @@ export function ToolCallRenderer({
 							);
 						}
 						}*/
-					return null;
-				})}
+          return null;
+        })}
 
-			{/* Permission request section */}
-			{permissionRequest && (
-				<PermissionRequestSection
-					permissionRequest={{
-						...permissionRequest,
-						selectedOptionId: selectedOptionId,
-					}}
-					toolCallId={toolCallId}
-					plugin={plugin}
-					onApprovePermission={onApprovePermission}
-					onOptionSelected={setSelectedOptionId}
-				/>
-			)}
-		</div>
-	);
+      {/* Permission request section */}
+      {permissionRequest && (
+        <PermissionRequestSection
+          permissionRequest={{
+            ...permissionRequest,
+            selectedOptionId: selectedOptionId,
+          }}
+          toolCallId={toolCallId}
+          plugin={plugin}
+          onApprovePermission={onApprovePermission}
+          onOptionSelected={setSelectedOptionId}
+        />
+      )}
+    </div>
+  );
 }
 
 /*
@@ -380,69 +366,69 @@ function FetchDetails({
 
 // Diff renderer component
 interface DiffRendererProps {
-	diff: {
-		type: "diff";
-		path: string;
-		oldText?: string | null;
-		newText: string;
-	};
-	plugin: AgentClientPlugin;
+  diff: {
+    type: "diff";
+    path: string;
+    oldText?: string | null;
+    newText: string;
+  };
+  plugin: AgentClientPlugin;
 }
 
 function DiffRenderer({ diff, plugin }: DiffRendererProps) {
-	// Simple line-based diff
-	const renderDiff = () => {
-		if (
-			diff.oldText === null ||
-			diff.oldText === undefined ||
-			diff.oldText === ""
-		) {
-			// New file
-			return (
-				<div className="tool-call-diff-new-file">
-					<div className="diff-line-info">New file</div>
-					{diff.newText.split("\n").map((line, idx) => (
-						<div key={idx} className="diff-line diff-line-added">
-							<span className="diff-line-marker">+</span>
-							<span className="diff-line-content">{line}</span>
-						</div>
-					))}
-				</div>
-			);
-		}
+  // Simple line-based diff
+  const renderDiff = () => {
+    if (
+      diff.oldText === null ||
+      diff.oldText === undefined ||
+      diff.oldText === ""
+    ) {
+      // New file
+      return (
+        <div className="tool-call-diff-new-file">
+          <div className="diff-line-info">New file</div>
+          {diff.newText.split("\n").map((line, idx) => (
+            <div key={idx} className="diff-line diff-line-added">
+              <span className="diff-line-marker">+</span>
+              <span className="diff-line-content">{line}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
 
-		const oldLines = diff.oldText.split("\n");
-		const newLines = diff.newText.split("\n");
+    const oldLines = diff.oldText.split("\n");
+    const newLines = diff.newText.split("\n");
 
-		// Simple comparison: show removed lines then added lines
-		const elements: React.ReactElement[] = [];
+    // Simple comparison: show removed lines then added lines
+    const elements: React.ReactElement[] = [];
 
-		// Show removed lines
-		oldLines.forEach((line, idx) => {
-			elements.push(
-				<div key={`old-${idx}`} className="diff-line diff-line-removed">
-					<span className="diff-line-marker">-</span>
-					<span className="diff-line-content">{line}</span>
-				</div>,
-			);
-		});
+    // Show removed lines
+    oldLines.forEach((line, idx) => {
+      elements.push(
+        <div key={`old-${idx}`} className="diff-line diff-line-removed">
+          <span className="diff-line-marker">-</span>
+          <span className="diff-line-content">{line}</span>
+        </div>,
+      );
+    });
 
-		// Show added lines
-		newLines.forEach((line, idx) => {
-			elements.push(
-				<div key={`new-${idx}`} className="diff-line diff-line-added">
-					<span className="diff-line-marker">+</span>
-					<span className="diff-line-content">{line}</span>
-				</div>,
-			);
-		});
+    // Show added lines
+    newLines.forEach((line, idx) => {
+      elements.push(
+        <div key={`new-${idx}`} className="diff-line diff-line-added">
+          <span className="diff-line-marker">+</span>
+          <span className="diff-line-content">{line}</span>
+        </div>,
+      );
+    });
 
-		return elements;
-	};
+    return elements;
+  };
 
-	return (
-		<div className="tool-call-diff">
-			<div className="tool-call-diff-content">{renderDiff()}</div>
-		</div>
-	);
+  return (
+    <div className="tool-call-diff">
+      <div className="tool-call-diff-content">{renderDiff()}</div>
+    </div>
+  );
 }

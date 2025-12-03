@@ -18,11 +18,11 @@
  * via environment variables (e.g., API keys, paths, feature flags).
  */
 export interface AgentEnvVar {
-	/** Environment variable name (e.g., "ANTHROPIC_API_KEY") */
-	key: string;
+  /** Environment variable name (e.g., "ANTHROPIC_API_KEY") */
+  key: string;
 
-	/** Environment variable value */
-	value: string;
+  /** Environment variable value */
+  value: string;
 }
 
 // ============================================================================
@@ -37,20 +37,20 @@ export interface AgentEnvVar {
  * implementation (Claude Code, Gemini CLI, custom agents, etc.).
  */
 export interface BaseAgentSettings {
-	/** Unique identifier for this agent (e.g., "claude", "gemini", "custom-1") */
-	id: string;
+  /** Unique identifier for this agent (e.g., "claude", "gemini", "custom-1") */
+  id: string;
 
-	/** Human-readable display name shown in UI */
-	displayName: string;
+  /** Human-readable display name shown in UI */
+  displayName: string;
 
-	/** Command to execute (full path to executable or command name) */
-	command: string;
+  /** Command to execute (full path to executable or command name) */
+  command: string;
 
-	/** Command-line arguments passed to the agent */
-	args: string[];
+  /** Command-line arguments passed to the agent */
+  args: string[];
 
-	/** Environment variables for the agent process */
-	env: AgentEnvVar[];
+  /** Environment variables for the agent process */
+  env: AgentEnvVar[];
 }
 
 /**
@@ -59,8 +59,8 @@ export interface BaseAgentSettings {
  * Extends base settings with Gemini-specific requirements.
  */
 export interface GeminiAgentSettings extends BaseAgentSettings {
-	/** Google API key for Gemini (GOOGLE_API_KEY) */
-	apiKey: string;
+  /** Google API key for Gemini (GOOGLE_API_KEY) */
+  apiKey: string;
 }
 
 /**
@@ -69,8 +69,8 @@ export interface GeminiAgentSettings extends BaseAgentSettings {
  * Extends base settings with Claude-specific requirements.
  */
 export interface ClaudeAgentSettings extends BaseAgentSettings {
-	/** Anthropic API key for Claude (ANTHROPIC_API_KEY) */
-	apiKey: string;
+  /** Anthropic API key for Claude (ANTHROPIC_API_KEY) */
+  apiKey: string;
 }
 
 /**
@@ -79,8 +79,8 @@ export interface ClaudeAgentSettings extends BaseAgentSettings {
  * Extends base settings with Codex-specific requirements.
  */
 export interface CodexAgentSettings extends BaseAgentSettings {
-	/** OpenAI API key for Codex (OPENAI_API_KEY) */
-	apiKey: string;
+  /** OpenAI API key for Codex (OPENAI_API_KEY) */
+  apiKey: string;
 }
 
 /**
