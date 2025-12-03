@@ -44,9 +44,9 @@ export type ToolKind =
 
 /**
  * Content that can be included in a tool call result.
- * Currently supports diffs and terminal output.
+ * Currently supports diffs.
  */
-export type ToolCallContent = DiffContent | TerminalContent;
+export type ToolCallContent = DiffContent;
 
 /**
  * Represents a file modification with before/after content.
@@ -56,14 +56,6 @@ export interface DiffContent {
   path: string;
   newText: string;
   oldText?: string | null; // null or undefined for new files
-}
-
-/**
- * Reference to a terminal session created by a tool call.
- */
-export interface TerminalContent {
-  type: "terminal";
-  terminalId: string;
 }
 
 // ============================================================================
@@ -138,7 +130,6 @@ export interface ChatMessage {
  * - tool_call: Agent's tool execution with results
  * - plan: Agent's task breakdown
  * - permission_request: Request for user approval
- * - terminal: Reference to a terminal session
  */
 export type MessageContent =
   | {
@@ -196,8 +187,4 @@ export type MessageContent =
       selectedOptionId?: string;
       isCancelled?: boolean;
       isActive?: boolean;
-    }
-  | {
-      type: "terminal";
-      terminalId: string;
     };

@@ -16,7 +16,6 @@ import type {
 } from "../../domain/models/chat-message";
 import type { AgentError } from "../../domain/models/agent-error";
 import { AcpTypeConverter } from "./acp-type-converter";
-import { TerminalManager } from "../../shared/terminal-manager";
 import { Logger } from "../../shared/logger";
 import type AgentClientPlugin from "../../plugin";
 import type { SlashCommand } from "src/domain/models/chat-session";
@@ -30,7 +29,7 @@ import { resolveCommandDirectory } from "../../shared/path-utils";
  * Extended ACP Client interface for UI layer.
  *
  * Provides ACP-specific operations needed by UI components
- * (terminal rendering, permission handling, etc.) that are not
+ * (permission handling, etc.) that are not
  * part of the domain-level IAgentClient interface.
  *
  * This interface extends the base ACP Client from the protocol library
@@ -38,15 +37,11 @@ import { resolveCommandDirectory } from "../../shared/path-utils";
  * - Permission response handling
  * - Operation cancellation
  * - Message state management
- * - Terminal I/O operations
  */
 export interface IAcpClient extends acp.Client {
   handlePermissionResponse(requestId: string, optionId: string): void;
   cancelAllOperations(): void;
   resetCurrentMessage(): void;
-  terminalOutput(
-    params: acp.TerminalOutputRequest,
-  ): Promise<acp.TerminalOutputResponse>;
 }
 
 /**
@@ -87,7 +82,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
   private autoAllowPermissions = false;
 
   // IAcpClient implementation properties
-  private terminalManager: TerminalManager;
   private currentMessageId: string | null = null;
   private pendingPermissionRequests = new Map<
     string,
@@ -114,9 +108,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
     this.addMessage = addMessage || (() => {});
     this.updateLastMessage = updateLastMessage || (() => {});
     this.updateMessage = updateMessage || (() => false);
-
-    // Initialize TerminalManager
-    this.terminalManager = new TerminalManager(plugin);
   }
 
   /**
@@ -402,7 +393,7 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
             readTextFile: false,
             writeTextFile: false,
           },
-          terminal: true,
+          terminal: false,
         },
       });
 
@@ -961,9 +952,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
   cancelAllOperations(): void {
     // Cancel pending permission requests
     this.cancelPendingPermissionRequests();
-
-    // Kill all running terminals
-    this.terminalManager.killAllTerminals();
   }
 
   private activateNextPermission(): void {
@@ -1143,63 +1131,6 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
   }
 
   writeTextFile(params: acp.WriteTextFileRequest) {
-    return Promise.resolve({});
-  }
-
-  createTerminal(
-    params: acp.CreateTerminalRequest,
-  ): Promise<acp.CreateTerminalResponse> {
-    this.logger.log("[AcpAdapter] createTerminal called with params:", params);
-
-    // Use current config's working directory if cwd is not provided
-    const modifiedParams = {
-      ...params,
-      cwd: params.cwd || this.currentConfig?.workingDirectory || "",
-    };
-    this.logger.log("[AcpAdapter] Using modified params:", modifiedParams);
-
-    const terminalId = this.terminalManager.createTerminal(modifiedParams);
-    return Promise.resolve({
-      terminalId,
-    });
-  }
-
-  terminalOutput(
-    params: acp.TerminalOutputRequest,
-  ): Promise<acp.TerminalOutputResponse> {
-    const result = this.terminalManager.getOutput(params.terminalId);
-    if (!result) {
-      throw new Error(`Terminal ${params.terminalId} not found`);
-    }
-    return Promise.resolve(result);
-  }
-
-  async waitForTerminalExit(
-    params: acp.WaitForTerminalExitRequest,
-  ): Promise<acp.WaitForTerminalExitResponse> {
-    return await this.terminalManager.waitForExit(params.terminalId);
-  }
-
-  killTerminal(
-    params: acp.KillTerminalCommandRequest,
-  ): Promise<acp.KillTerminalResponse> {
-    const success = this.terminalManager.killTerminal(params.terminalId);
-    if (!success) {
-      throw new Error(`Terminal ${params.terminalId} not found`);
-    }
-    return Promise.resolve({});
-  }
-
-  releaseTerminal(
-    params: acp.ReleaseTerminalRequest,
-  ): Promise<acp.ReleaseTerminalResponse> {
-    const success = this.terminalManager.releaseTerminal(params.terminalId);
-    // Don't throw error if terminal not found - it may have been already cleaned up
-    if (!success) {
-      this.logger.log(
-        `[AcpAdapter] releaseTerminal: Terminal ${params.terminalId} not found (may have been already cleaned up)`,
-      );
-    }
     return Promise.resolve({});
   }
 }

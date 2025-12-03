@@ -180,9 +180,6 @@ tags: [agent-client]
       case "tool_call":
         return this.convertToolCallToMarkdown(content);
 
-      case "terminal":
-        return `### 🖥️ Terminal: ${content.terminalId.slice(0, 8)}\n\n`;
-
       case "plan":
         return this.convertPlanToMarkdown(content);
 

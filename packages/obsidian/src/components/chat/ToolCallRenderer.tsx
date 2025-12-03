@@ -3,7 +3,6 @@ const { useState, useMemo } = React;
 import type { MessageContent } from "../../domain/models/chat-message";
 import type { IAcpClient } from "../../adapters/acp/acp.adapter";
 import type AgentClientPlugin from "../../plugin";
-import { TerminalRenderer } from "./TerminalRenderer";
 import { PermissionRequestSection } from "./PermissionRequestSection";
 import { toRelativePath } from "../../shared/path-utils";
 // import { MarkdownTextRenderer } from "./MarkdownTextRenderer";
@@ -110,19 +109,9 @@ export function ToolCallRenderer({
 				</div>
 			)*/}
 
-      {/* Tool call content (diffs, terminal output, etc.) */}
+      {/* Tool call content (diffs, etc.) */}
       {toolContent &&
         toolContent.map((item, index) => {
-          if (item.type === "terminal") {
-            return (
-              <TerminalRenderer
-                key={index}
-                terminalId={item.terminalId}
-                acpClient={acpClient || null}
-                plugin={plugin}
-              />
-            );
-          }
           if (item.type === "diff") {
             return <DiffRenderer key={index} diff={item} plugin={plugin} />;
           }

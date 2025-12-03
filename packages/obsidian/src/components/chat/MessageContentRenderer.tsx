@@ -4,7 +4,6 @@ import type { IAcpClient } from "../../adapters/acp/acp.adapter";
 import type AgentClientPlugin from "../../plugin";
 import { MarkdownTextRenderer } from "./MarkdownTextRenderer";
 import { CollapsibleThought } from "./CollapsibleThought";
-import { TerminalRenderer } from "./TerminalRenderer";
 import { TextWithMentions } from "./TextWithMentions";
 import { ToolCallRenderer } from "./ToolCallRenderer";
 
@@ -77,15 +76,6 @@ export function MessageContentRenderer({
             </div>
           ))}
         </div>
-      );
-
-    case "terminal":
-      return (
-        <TerminalRenderer
-          terminalId={content.terminalId}
-          acpClient={acpClient || null}
-          plugin={plugin}
-        />
       );
 
     default:
