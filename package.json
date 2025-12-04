@@ -12,5 +12,8 @@
   "packageManager": "pnpm@10.24.0",
   "devDependencies": {
     "prettier": "^3.4.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }
