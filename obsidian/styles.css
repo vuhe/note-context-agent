@@ -329,9 +329,9 @@ If your plugin does not need CSS, delete this file.
 }
 
 /* Normal option button hover (no kind specified) */
-.permission-option:not(.permission-kind-allow_always):not(
-    .permission-kind-reject_once
-  ):not(.permission-kind-allow_once):not(.disabled):not(.selected):hover {
+.permission-option:not(.permission-kind-allow_always):not(.permission-kind-reject_once):not(
+    .permission-kind-allow_once
+  ):not(.disabled):not(.selected):hover {
   background-color: var(--background-modifier-hover) !important;
 }
 
@@ -549,9 +549,7 @@ If your plugin does not need CSS, delete this file.
 
 .chat-input-textarea.has-auto-mention {
   padding-top: calc(var(--font-text-size) * var(--line-height-normal) + 16px);
-  min-height: calc(
-    80px + var(--font-text-size) * var(--line-height-normal) + 16px
-  );
+  min-height: calc(80px + var(--font-text-size) * var(--line-height-normal) + 16px);
 }
 
 .chat-input-textarea::-webkit-scrollbar {

@@ -12,15 +12,10 @@ export function CollapsibleThought({ text, plugin }: CollapsibleThoughtProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div
-      className="collapsible-thought"
-      onClick={() => setIsExpanded(!isExpanded)}
-    >
+    <div className="collapsible-thought" onClick={() => setIsExpanded(!isExpanded)}>
       <div className="collapsible-thought-header">
         💡Thinking
-        <span className="collapsible-thought-icon">
-          {isExpanded ? "▼" : "▶"}
-        </span>
+        <span className="collapsible-thought-icon">{isExpanded ? "▼" : "▶"}</span>
       </div>
       {isExpanded && (
         <div className="collapsible-thought-content">

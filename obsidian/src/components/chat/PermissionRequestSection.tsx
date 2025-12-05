@@ -51,10 +51,7 @@ export function PermissionRequestSection({
 
                 if (onApprovePermission) {
                   // Send response to agent via callback
-                  void onApprovePermission(
-                    permissionRequest.requestId,
-                    option.optionId,
-                  );
+                  void onApprovePermission(permissionRequest.requestId, option.optionId);
                 } else {
                   logger.warn(
                     "Cannot handle permission response: missing onApprovePermission callback",

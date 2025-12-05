@@ -1,8 +1,5 @@
 import { useState, useCallback } from "react";
-import type {
-  ChatMessage,
-  MessageContent,
-} from "../domain/models/chat-message";
+import type { ChatMessage, MessageContent } from "../domain/models/chat-message";
 import type { IAgentClient } from "../domain/ports/agent-client.port";
 import type { IVaultAccess } from "../domain/ports/vault-access.port";
 import type { NoteMetadata } from "../domain/ports/vault-access.port";
@@ -155,10 +152,7 @@ export function useChat(
         if (existingContentIndex >= 0) {
           const existingContent = updatedMessage.content[existingContentIndex];
           // Type guard: we know it's text or agent_thought from findIndex condition
-          if (
-            existingContent.type === "text" ||
-            existingContent.type === "agent_thought"
-          ) {
+          if (existingContent.type === "text" || existingContent.type === "agent_thought") {
             updatedMessage.content[existingContentIndex] = {
               type: content.type,
               text:
@@ -172,9 +166,7 @@ export function useChat(
         }
       } else {
         // Replace or add non-text content
-        const existingIndex = updatedMessage.content.findIndex(
-          (c) => c.type === content.type,
-        );
+        const existingIndex = updatedMessage.content.findIndex((c) => c.type === content.type);
 
         if (existingIndex >= 0) {
           updatedMessage.content[existingIndex] = content;
@@ -190,61 +182,55 @@ export function useChat(
   /**
    * Update a specific message by tool call ID.
    */
-  const updateMessage = useCallback(
-    (toolCallId: string, content: MessageContent): boolean => {
-      let found = false;
+  const updateMessage = useCallback((toolCallId: string, content: MessageContent): boolean => {
+    let found = false;
 
-      setMessages((prev) => {
-        const updatedMessages = prev.map((message) => ({
-          ...message,
-          content: message.content.map((c) => {
-            if (
-              c.type === "tool_call" &&
-              c.toolCallId === toolCallId &&
-              content.type === "tool_call"
-            ) {
-              found = true;
-              // Merge content arrays
-              let mergedContent = c.content || [];
-              if (content.content !== undefined) {
-                const newContent = content.content || [];
+    setMessages((prev) => {
+      const updatedMessages = prev.map((message) => ({
+        ...message,
+        content: message.content.map((c) => {
+          if (
+            c.type === "tool_call" &&
+            c.toolCallId === toolCallId &&
+            content.type === "tool_call"
+          ) {
+            found = true;
+            // Merge content arrays
+            let mergedContent = c.content || [];
+            if (content.content !== undefined) {
+              const newContent = content.content || [];
 
-                // If new content contains diff, replace all old diffs
-                const hasDiff = newContent.some((item) => item.type === "diff");
-                if (hasDiff) {
-                  mergedContent = mergedContent.filter(
-                    (item) => item.type !== "diff",
-                  );
-                }
-
-                mergedContent = [...mergedContent, ...newContent];
+              // If new content contains diff, replace all old diffs
+              const hasDiff = newContent.some((item) => item.type === "diff");
+              if (hasDiff) {
+                mergedContent = mergedContent.filter((item) => item.type !== "diff");
               }
 
-              return {
-                ...c,
-                toolCallId: content.toolCallId,
-                title: content.title !== undefined ? content.title : c.title,
-                kind: content.kind !== undefined ? content.kind : c.kind,
-                status:
-                  content.status !== undefined ? content.status : c.status,
-                content: mergedContent,
-                permissionRequest:
-                  content.permissionRequest !== undefined
-                    ? content.permissionRequest
-                    : c.permissionRequest,
-              };
+              mergedContent = [...mergedContent, ...newContent];
             }
-            return c;
-          }),
-        }));
 
-        return found ? updatedMessages : prev;
-      });
+            return {
+              ...c,
+              toolCallId: content.toolCallId,
+              title: content.title !== undefined ? content.title : c.title,
+              kind: content.kind !== undefined ? content.kind : c.kind,
+              status: content.status !== undefined ? content.status : c.status,
+              content: mergedContent,
+              permissionRequest:
+                content.permissionRequest !== undefined
+                  ? content.permissionRequest
+                  : c.permissionRequest,
+            };
+          }
+          return c;
+        }),
+      }));
 
-      return found;
-    },
-    [],
-  );
+      return found ? updatedMessages : prev;
+    });
+
+    return found;
+  }, []);
 
   /**
    * Clear all messages.

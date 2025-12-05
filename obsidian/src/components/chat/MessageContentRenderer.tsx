@@ -63,14 +63,8 @@ export function MessageContentRenderer({
           <div className="message-plan-title">📋 Plan</div>
           {content.entries.map((entry, idx) => (
             <div key={idx} className="message-plan-entry">
-              <span
-                className={`message-plan-entry-icon status-${entry.status}`}
-              >
-                {entry.status === "completed"
-                  ? "✓"
-                  : entry.status === "in_progress"
-                    ? "⏳"
-                    : "⭕"}
+              <span className={`message-plan-entry-icon status-${entry.status}`}>
+                {entry.status === "completed" ? "✓" : entry.status === "in_progress" ? "⏳" : "⭕"}
               </span>{" "}
               {entry.content}
             </div>

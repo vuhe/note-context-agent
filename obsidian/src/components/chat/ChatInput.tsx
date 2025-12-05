@@ -134,9 +134,7 @@ export function ChatInput({
       window.setTimeout(() => {
         const textarea = textareaRef.current;
         if (textarea) {
-          const cursorPos = command.hint
-            ? `/${command.name} `.length
-            : newText.length;
+          const cursorPos = command.hint ? `/${command.name} `.length : newText.length;
           textarea.selectionStart = cursorPos;
           textarea.selectionEnd = cursorPos;
           textarea.focus();
@@ -163,19 +161,13 @@ export function ChatInput({
       const minHeight = hasAutoMention ? 116 : 80;
 
       // Check if expansion is needed
-      const calculatedHeight = Math.max(
-        minHeight,
-        Math.min(scrollHeight, maxHeight),
-      );
+      const calculatedHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
 
       // Apply expanded class if needed
       if (calculatedHeight > minHeight) {
         textarea.classList.add("textarea-expanded");
         // Set CSS variable for dynamic height
-        textarea.style.setProperty(
-          "--textarea-height",
-          `${calculatedHeight}px`,
-        );
+        textarea.style.setProperty("--textarea-height", `${calculatedHeight}px`);
       } else {
         textarea.style.removeProperty("--textarea-height");
       }
@@ -263,14 +255,12 @@ export function ChatInput({
       if (e.key === "Enter" || e.key === "Tab") {
         e.preventDefault();
         if (isSlashCommandActive) {
-          const selectedCommand =
-            slashCommands.suggestions[slashCommands.selectedIndex];
+          const selectedCommand = slashCommands.suggestions[slashCommands.selectedIndex];
           if (selectedCommand) {
             handleSelectSlashCommand(selectedCommand);
           }
         } else {
-          const selectedSuggestion =
-            mentions.suggestions[mentions.selectedIndex];
+          const selectedSuggestion = mentions.suggestions[mentions.selectedIndex];
           if (selectedSuggestion) {
             selectMention(selectedSuggestion);
           }
@@ -307,20 +297,13 @@ export function ChatInput({
       // Normal input handling
       if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
         e.preventDefault();
-        const buttonDisabled =
-          !isSending && (inputValue.trim() === "" || !isSessionReady);
+        const buttonDisabled = !isSending && (inputValue.trim() === "" || !isSessionReady);
         if (!buttonDisabled && !isSending) {
           void handleSendOrStop();
         }
       }
     },
-    [
-      handleDropdownKeyPress,
-      isSending,
-      inputValue,
-      isSessionReady,
-      handleSendOrStop,
-    ],
+    [handleDropdownKeyPress, isSending, inputValue, isSessionReady, handleSendOrStop],
   );
 
   /**
@@ -406,8 +389,7 @@ export function ChatInput({
   }, [restoredMessage, onRestoredMessageConsumed]);
 
   // Button disabled state
-  const isButtonDisabled =
-    !isSending && (inputValue.trim() === "" || !isSessionReady);
+  const isButtonDisabled = !isSending && (inputValue.trim() === "" || !isSessionReady);
 
   // Placeholder text
   const placeholder = `Message agent - @ to mention notes${availableCommands.length > 0 ? ", / for commands" : ""}`;
@@ -452,9 +434,7 @@ export function ChatInput({
         {/* Auto-mention Badge */}
         {autoMentionEnabled && autoMention.activeNote && (
           <div className="auto-mention-inline">
-            <span
-              className={`mention-badge ${autoMention.isDisabled ? "disabled" : ""}`}
-            >
+            <span className={`mention-badge ${autoMention.isDisabled ? "disabled" : ""}`}>
               @{autoMention.activeNote.name}
               {autoMention.activeNote.selection && (
                 <span className="selection-indicator">
@@ -473,9 +453,7 @@ export function ChatInput({
                 setIcon(e.currentTarget, iconName);
               }}
               title={
-                autoMention.isDisabled
-                  ? "Enable auto-mention"
-                  : "Temporarily disable auto-mention"
+                autoMention.isDisabled ? "Enable auto-mention" : "Temporarily disable auto-mention"
               }
               ref={(el) => {
                 if (el) {
@@ -512,13 +490,7 @@ export function ChatInput({
           onClick={() => void handleSendOrStop()}
           disabled={isButtonDisabled}
           className={`chat-send-button ${isSending ? "sending" : ""} ${isButtonDisabled ? "disabled" : ""}`}
-          title={
-            !isSessionReady
-              ? "Connecting..."
-              : isSending
-                ? "Stop generation"
-                : "Send message"
-          }
+          title={!isSessionReady ? "Connecting..." : isSending ? "Stop generation" : "Send message"}
         ></button>
       </div>
     </div>

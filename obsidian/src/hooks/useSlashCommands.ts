@@ -77,9 +77,7 @@ export function useSlashCommands(
       const query = afterSlash.toLowerCase();
 
       // Filter available commands
-      const filtered = availableCommands.filter((cmd) =>
-        cmd.name.toLowerCase().includes(query),
-      );
+      const filtered = availableCommands.filter((cmd) => cmd.name.toLowerCase().includes(query));
 
       setSuggestions(filtered);
       setSelectedIndex(0);
@@ -90,19 +88,16 @@ export function useSlashCommands(
     [availableCommands, onAutoMentionToggle, suggestions.length],
   );
 
-  const selectSuggestion = useCallback(
-    (_input: string, command: SlashCommand): string => {
-      // Return only the command text (hint will be shown as overlay in UI)
-      const commandText = `/${command.name} `;
+  const selectSuggestion = useCallback((_input: string, command: SlashCommand): string => {
+    // Return only the command text (hint will be shown as overlay in UI)
+    const commandText = `/${command.name} `;
 
-      // Close dropdown
-      setSuggestions([]);
-      setSelectedIndex(0);
+    // Close dropdown
+    setSuggestions([]);
+    setSelectedIndex(0);
 
-      return commandText;
-    },
-    [],
-  );
+    return commandText;
+  }, []);
 
   const navigate = useCallback(
     (direction: "up" | "down") => {

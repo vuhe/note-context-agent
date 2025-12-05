@@ -25,11 +25,7 @@ export function ChatHeader({ onNewChat, onOpenSettings }: ChatHeaderProps) {
       <h3 className="chat-view-header-title">Note ACP</h3>
       <div className="chat-view-header-actions">
         <HeaderButton iconName="plus" tooltip="New chat" onClick={onNewChat} />
-        <HeaderButton
-          iconName="settings"
-          tooltip="Settings"
-          onClick={onOpenSettings}
-        />
+        <HeaderButton iconName="settings" tooltip="Settings" onClick={onOpenSettings} />
       </div>
     </div>
   );

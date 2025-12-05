@@ -43,29 +43,17 @@ interface AppWithSettings {
 
 export const VIEW_TYPE_CHAT = "agent-client-chat-view";
 
-function ChatComponent({
-  plugin,
-  view,
-}: {
-  plugin: AgentClientPlugin;
-  view: ChatView;
-}) {
+function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: ChatView }) {
   // ============================================================
   // Memoized Services & Adapters
   // ============================================================
   const logger = useMemo(() => new Logger(plugin), [plugin]);
 
   const vaultPath = useMemo(() => {
-    return (
-      (plugin.app.vault.adapter as VaultAdapterWithBasePath).basePath ||
-      process.cwd()
-    );
+    return (plugin.app.vault.adapter as VaultAdapterWithBasePath).basePath || process.cwd();
   }, [plugin]);
 
-  const noteMentionService = useMemo(
-    () => new NoteMentionService(plugin),
-    [plugin],
-  );
+  const noteMentionService = useMemo(() => new NoteMentionService(plugin), [plugin]);
 
   // Cleanup NoteMentionService when component unmounts
   useEffect(() => {
@@ -86,17 +74,9 @@ function ChatComponent({
   // ============================================================
   const settings = useSettings(plugin);
 
-  const agentSession = useAgentSession(
-    acpAdapter,
-    plugin.settingsStore,
-    vaultPath,
-  );
+  const agentSession = useAgentSession(acpAdapter, plugin.settingsStore, vaultPath);
 
-  const {
-    session,
-    errorInfo: sessionErrorInfo,
-    isReady: isSessionReady,
-  } = agentSession;
+  const { session, errorInfo: sessionErrorInfo, isReady: isSessionReady } = agentSession;
 
   const chat = useChat(acpAdapter, vaultAccessAdapter, noteMentionService, {
     sessionId: session.sessionId,
@@ -109,10 +89,7 @@ function ChatComponent({
 
   const mentions = useMentions(vaultAccessAdapter, plugin);
   const autoMention = useAutoMention(vaultAccessAdapter);
-  const slashCommands = useSlashCommands(
-    session.availableCommands || [],
-    autoMention.toggle,
-  );
+  const slashCommands = useSlashCommands(session.availableCommands || [], autoMention.toggle);
 
   // Combined error info (session errors take precedence)
   const errorInfo = sessionErrorInfo || chat.errorInfo || permission.errorInfo;
@@ -154,8 +131,7 @@ function ChatComponent({
     async (content: string) => {
       await chat.sendMessage(content, {
         activeNote: autoMention.activeNote,
-        vaultBasePath:
-          (plugin.app.vault.adapter as VaultAdapterWithBasePath).basePath || "",
+        vaultBasePath: (plugin.app.vault.adapter as VaultAdapterWithBasePath).basePath || "",
         isAutoMentionDisabled: autoMention.isDisabled,
       });
     },
@@ -257,12 +233,9 @@ function ChatComponent({
   useEffect(() => {
     const workspace = plugin.app.workspace;
 
-    const eventRef = workspace.on(
-      "agent-client:toggle-auto-mention" as "quit",
-      () => {
-        autoMention.toggle();
-      },
-    );
+    const eventRef = workspace.on("agent-client:toggle-auto-mention" as "quit", () => {
+      autoMention.toggle();
+    });
 
     return () => {
       workspace.offref(eventRef);
@@ -276,10 +249,7 @@ function ChatComponent({
     // Cast to any to bypass Obsidian's type constraints for custom events
     const eventRef = (
       workspace as unknown as {
-        on: (
-          name: string,
-          callback: () => void,
-        ) => ReturnType<typeof workspace.on>;
+        on: (name: string, callback: () => void) => ReturnType<typeof workspace.on>;
       }
     ).on("agent-client:new-chat-requested", () => {
       void handleNewChat();
@@ -293,36 +263,27 @@ function ChatComponent({
   useEffect(() => {
     const workspace = plugin.app.workspace;
 
-    const approveRef = workspace.on(
-      "agent-client:approve-active-permission" as "quit",
-      () => {
-        void (async () => {
-          const success = await permission.approveActivePermission();
-          if (!success) {
-            new Notice("[Agent Client] No active permission request");
-          }
-        })();
-      },
-    );
+    const approveRef = workspace.on("agent-client:approve-active-permission" as "quit", () => {
+      void (async () => {
+        const success = await permission.approveActivePermission();
+        if (!success) {
+          new Notice("[Agent Client] No active permission request");
+        }
+      })();
+    });
 
-    const rejectRef = workspace.on(
-      "agent-client:reject-active-permission" as "quit",
-      () => {
-        void (async () => {
-          const success = await permission.rejectActivePermission();
-          if (!success) {
-            new Notice("[Agent Client] No active permission request");
-          }
-        })();
-      },
-    );
+    const rejectRef = workspace.on("agent-client:reject-active-permission" as "quit", () => {
+      void (async () => {
+        const success = await permission.rejectActivePermission();
+        if (!success) {
+          new Notice("[Agent Client] No active permission request");
+        }
+      })();
+    });
 
-    const cancelRef = workspace.on(
-      "agent-client:cancel-message" as "quit",
-      () => {
-        void handleStopGeneration();
-      },
-    );
+    const cancelRef = workspace.on("agent-client:cancel-message" as "quit", () => {
+      void handleStopGeneration();
+    });
 
     return () => {
       workspace.offref(approveRef);
@@ -341,10 +302,7 @@ function ChatComponent({
   // ============================================================
   return (
     <div className="chat-view-container">
-      <ChatHeader
-        onNewChat={() => void handleNewChat()}
-        onOpenSettings={handleOpenSettings}
-      />
+      <ChatHeader onNewChat={() => void handleNewChat()} onOpenSettings={handleOpenSettings} />
 
       <ChatMessages
         messages={messages}

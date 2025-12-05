@@ -8,11 +8,7 @@ interface HeaderButtonProps {
   onClick: () => void;
 }
 
-export function HeaderButton({
-  iconName,
-  tooltip,
-  onClick,
-}: HeaderButtonProps) {
+export function HeaderButton({ iconName, tooltip, onClick }: HeaderButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -21,12 +17,5 @@ export function HeaderButton({
     }
   }, [iconName]);
 
-  return (
-    <button
-      ref={buttonRef}
-      title={tooltip}
-      onClick={onClick}
-      className="header-button"
-    />
-  );
+  return <button ref={buttonRef} title={tooltip} onClick={onClick} className="header-button" />;
 }

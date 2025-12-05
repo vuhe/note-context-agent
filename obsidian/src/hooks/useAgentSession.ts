@@ -102,9 +102,7 @@ export function useAgentSession(
   workingDirectory: string,
 ): UseAgentSessionReturn {
   // Session state
-  const [session, setSession] = useState<ChatSession>(() =>
-    createInitialSession(workingDirectory),
-  );
+  const [session, setSession] = useState<ChatSession>(() => createInitialSession(workingDirectory));
 
   // Error state
   const [errorInfo, setErrorInfo] = useState<SessionErrorInfo | null>(null);

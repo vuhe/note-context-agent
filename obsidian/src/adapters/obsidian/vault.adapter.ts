@@ -13,12 +13,7 @@ import type {
 } from "../../domain/ports/vault-access.port";
 import { NoteMentionService } from "./mention-service";
 import type AgentClientPlugin from "../../plugin";
-import {
-  TFile,
-  MarkdownView,
-  type EventRef,
-  type EditorSelection,
-} from "obsidian";
+import { TFile, MarkdownView, type EventRef, type EditorSelection } from "obsidian";
 import { EditorView } from "@codemirror/view";
 import { Compartment, StateEffect } from "@codemirror/state";
 
@@ -93,10 +88,7 @@ export class ObsidianVaultAdapter implements IVaultAccess {
     const metadata = this.convertToMetadata(activeFile);
 
     // Add selection if we have it stored for this file
-    if (
-      this.currentSelection &&
-      this.currentSelection.filePath === activeFile.path
-    ) {
+    if (this.currentSelection && this.currentSelection.filePath === activeFile.path) {
       metadata.selection = this.currentSelection.selection;
     }
 
@@ -127,20 +119,16 @@ export class ObsidianVaultAdapter implements IVaultAccess {
       return;
     }
 
-    const activeView =
-      this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+    const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     this.attachToView(activeView ?? null);
 
-    this.activeLeafRef = this.plugin.app.workspace.on(
-      "active-leaf-change",
-      (leaf) => {
-        const nextView =
-          leaf?.view instanceof MarkdownView
-            ? leaf.view
-            : this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-        this.attachToView(nextView ?? null);
-      },
-    );
+    this.activeLeafRef = this.plugin.app.workspace.on("active-leaf-change", (leaf) => {
+      const nextView =
+        leaf?.view instanceof MarkdownView
+          ? leaf.view
+          : this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+      this.attachToView(nextView ?? null);
+    });
   }
 
   private teardownSelectionTracking(): void {
@@ -170,10 +158,7 @@ export class ObsidianVaultAdapter implements IVaultAccess {
     const { editor, file } = view;
     const filePath = file.path;
 
-    if (
-      this.lastSelectionKey &&
-      !this.lastSelectionKey.startsWith(`${filePath}:`)
-    ) {
+    if (this.lastSelectionKey && !this.lastSelectionKey.startsWith(`${filePath}:`)) {
       // Clear previous file selection when switching files
       this.handleSelectionChange(filePath, null);
     }
@@ -255,8 +240,7 @@ export class ObsidianVaultAdapter implements IVaultAccess {
     const anchor = selection.anchor;
     const head = selection.head ?? selection.anchor;
     const anchorFirst =
-      anchor.line < head.line ||
-      (anchor.line === head.line && anchor.ch <= head.ch);
+      anchor.line < head.line || (anchor.line === head.line && anchor.ch <= head.ch);
 
     return anchorFirst ? { anchor, head } : { anchor: head, head: anchor };
   }
@@ -324,10 +308,7 @@ export class ObsidianVaultAdapter implements IVaultAccess {
    */
   private convertToMetadata(file: TFile): NoteMetadata {
     const cache = this.plugin.app.metadataCache.getFileCache(file);
-    const aliases = cache?.frontmatter?.aliases as
-      | string[]
-      | string
-      | undefined;
+    const aliases = cache?.frontmatter?.aliases as string[] | string | undefined;
 
     return {
       path: file.path,
@@ -335,11 +316,7 @@ export class ObsidianVaultAdapter implements IVaultAccess {
       extension: file.extension,
       created: file.stat.ctime,
       modified: file.stat.mtime,
-      aliases: Array.isArray(aliases)
-        ? aliases
-        : aliases
-          ? [aliases]
-          : undefined,
+      aliases: Array.isArray(aliases) ? aliases : aliases ? [aliases] : undefined,
     };
   }
 }

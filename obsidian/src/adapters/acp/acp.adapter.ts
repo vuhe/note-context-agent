@@ -51,19 +51,13 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
   // Callback handlers
   private messageCallback: ((message: ChatMessage) => void) | null = null;
   private errorCallback: ((error: AgentError) => void) | null = null;
-  private permissionCallback: ((request: PermissionRequest) => void) | null =
-    null;
-  private updateAvailableCommandsCallback:
-    | ((commands: SlashCommand[]) => void)
-    | null = null;
+  private permissionCallback: ((request: PermissionRequest) => void) | null = null;
+  private updateAvailableCommandsCallback: ((commands: SlashCommand[]) => void) | null = null;
 
   // Message update callbacks (for ViewModel integration)
   private addMessage: (message: ChatMessage) => void;
   private updateLastMessage: (content: MessageContent) => void;
-  private updateMessage: (
-    toolCallId: string,
-    content: MessageContent,
-  ) => boolean;
+  private updateMessage: (toolCallId: string, content: MessageContent) => boolean;
 
   // Configuration state
   private workingDirectory: string | null = null;
@@ -127,10 +121,7 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
    * Spawns the agent process and establishes ACP connection.
    */
   async initialize(workingDirectory: string): Promise<InitializeResult> {
-    this.logger.log(
-      "[AcpAdapter] Starting agent process in directory:",
-      workingDirectory,
-    );
+    this.logger.log("[AcpAdapter] Starting agent process in directory:", workingDirectory);
 
     this.workingDirectory = workingDirectory;
 
@@ -197,19 +188,14 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
       // Check if this is a rate limit error
       const errorObj = error as Record<string, unknown> | null;
       const isRateLimitError =
-        errorObj &&
-        typeof errorObj === "object" &&
-        "code" in errorObj &&
-        errorObj.code === 429;
+        errorObj && typeof errorObj === "object" && "code" in errorObj && errorObj.code === 429;
 
       let agentError: AgentError;
 
       if (isRateLimitError) {
         // Rate limit error
         const errorMessage =
-          errorObj &&
-          "message" in errorObj &&
-          typeof errorObj.message === "string"
+          errorObj && "message" in errorObj && typeof errorObj.message === "string"
             ? errorObj.message
             : null;
         agentError = {
@@ -233,8 +219,7 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
           severity: "error",
           title: "Authentication Failed",
           message: `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
-          suggestion:
-            "Please check your API key or authentication credentials in settings.",
+          suggestion: "Please check your API key or authentication credentials in settings.",
           occurredAt: new Date(),
           originalError: error,
         };
@@ -258,9 +243,7 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
       // TODO: 应该替换为后端的处理，发送一条之后，后端会一直进行输出直到结束
       const promptResult = { stopReason: "backend stop" };
 
-      this.logger.log(
-        `[AcpAdapter] ✅ Agent completed with: ${promptResult.stopReason}`,
-      );
+      this.logger.log(`[AcpAdapter] ✅ Agent completed with: ${promptResult.stopReason}`);
     } catch (error: unknown) {
       this.logger.error("[AcpAdapter] Prompt Error:", error);
 
@@ -282,9 +265,7 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
         ) {
           // Ignore "empty response text" errors
           if (errorData.details.includes("empty response text")) {
-            this.logger.log(
-              "[AcpAdapter] Empty response text error - ignoring",
-            );
+            this.logger.log("[AcpAdapter] Empty response text error - ignoring");
             return;
           }
           // Ignore "user aborted" errors (from cancel operation)
@@ -487,13 +468,11 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
           update.availableCommands,
         );
 
-        const commands: SlashCommand[] = (update.availableCommands || []).map(
-          (cmd) => ({
-            name: cmd.name,
-            description: cmd.description,
-            hint: cmd.input?.hint ?? null,
-          }),
-        );
+        const commands: SlashCommand[] = (update.availableCommands || []).map((cmd) => ({
+          name: cmd.name,
+          description: cmd.description,
+          hint: cmd.input?.hint ?? null,
+        }));
 
         if (this.updateAvailableCommandsCallback) {
           this.updateAvailableCommandsCallback(commands);
@@ -595,10 +574,7 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
             (!option.kind && option.name.toLowerCase().includes("allow")),
         ) || params.options[0]; // fallback to first option
 
-      this.logger.log(
-        "[AcpAdapter] Auto-allowing permission request:",
-        allowOption,
-      );
+      this.logger.log("[AcpAdapter] Auto-allowing permission request:", allowOption);
 
       return Promise.resolve({
         outcome: {
@@ -612,23 +588,20 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
     const requestId = crypto.randomUUID();
     const toolCallId = params.toolCall?.toolCallId || crypto.randomUUID();
 
-    const normalizedOptions: PermissionOption[] = params.options.map(
-      (option) => {
-        const normalizedKind =
-          option.kind === "reject_always" ? "reject_once" : option.kind;
-        const kind: PermissionOption["kind"] = normalizedKind
-          ? normalizedKind
-          : option.name.toLowerCase().includes("allow")
-            ? "allow_once"
-            : "reject_once";
+    const normalizedOptions: PermissionOption[] = params.options.map((option) => {
+      const normalizedKind = option.kind === "reject_always" ? "reject_once" : option.kind;
+      const kind: PermissionOption["kind"] = normalizedKind
+        ? normalizedKind
+        : option.name.toLowerCase().includes("allow")
+          ? "allow_once"
+          : "reject_once";
 
-        return {
-          optionId: option.optionId,
-          name: option.name,
-          kind,
-        };
-      },
-    );
+      return {
+        optionId: option.optionId,
+        name: option.name,
+        kind,
+      };
+    });
 
     const isFirstRequest = this.pendingPermissionQueue.length === 0;
 
@@ -696,29 +669,27 @@ export class AcpAdapter implements IAgentClient, IAcpClient {
     this.logger.log(
       `[AcpAdapter] Cancelling ${this.pendingPermissionRequests.size} pending permission requests`,
     );
-    this.pendingPermissionRequests.forEach(
-      ({ resolve, toolCallId, options }, requestId) => {
-        // Update UI to show cancelled state
-        this.updateMessage(toolCallId, {
-          type: "tool_call",
-          toolCallId,
-          status: "completed",
-          permissionRequest: {
-            requestId,
-            options,
-            isCancelled: true,
-            isActive: false,
-          },
-        } as MessageContent);
+    this.pendingPermissionRequests.forEach(({ resolve, toolCallId, options }, requestId) => {
+      // Update UI to show cancelled state
+      this.updateMessage(toolCallId, {
+        type: "tool_call",
+        toolCallId,
+        status: "completed",
+        permissionRequest: {
+          requestId,
+          options,
+          isCancelled: true,
+          isActive: false,
+        },
+      } as MessageContent);
 
-        // Resolve the promise with cancelled outcome
-        resolve({
-          outcome: {
-            outcome: "cancelled",
-          },
-        });
-      },
-    );
+      // Resolve the promise with cancelled outcome
+      resolve({
+        outcome: {
+          outcome: "cancelled",
+        },
+      });
+    });
     this.pendingPermissionRequests.clear();
     this.pendingPermissionQueue = [];
   }

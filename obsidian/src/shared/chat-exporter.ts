@@ -1,8 +1,5 @@
 import type AgentClientPlugin from "../plugin";
-import type {
-  ChatMessage,
-  MessageContent,
-} from "../domain/models/chat-message";
+import type { ChatMessage, MessageContent } from "../domain/models/chat-message";
 import { Logger } from "./logger";
 import { TFile } from "obsidian";
 
@@ -20,8 +17,7 @@ export class ChatExporter {
     openFile = true,
   ): Promise<string> {
     // Use first message timestamp if available, fallback to session creation time
-    const effectiveTimestamp =
-      messages.length > 0 ? messages[0].timestamp : sessionCreatedAt;
+    const effectiveTimestamp = messages.length > 0 ? messages[0].timestamp : sessionCreatedAt;
 
     const fileName = this.generateFileName(effectiveTimestamp);
     const folderPath = "Agent Client";
@@ -32,20 +28,12 @@ export class ChatExporter {
     const filePath = `${folderPath}/${fileName}.md`;
 
     try {
-      const frontmatter = this.generateFrontmatter(
-        sessionId,
-        effectiveTimestamp,
-      );
-      const chatContent = this.convertMessagesToMarkdown(
-        messages,
-        sessionId,
-        effectiveTimestamp,
-      );
+      const frontmatter = this.generateFrontmatter(sessionId, effectiveTimestamp);
+      const chatContent = this.convertMessagesToMarkdown(messages, sessionId, effectiveTimestamp);
       const fullContent = `${frontmatter}\n\n${chatContent}`;
 
       // Check if file already exists
-      const existingFile =
-        this.plugin.app.vault.getAbstractFileByPath(filePath);
+      const existingFile = this.plugin.app.vault.getAbstractFileByPath(filePath);
       let file: TFile;
 
       if (existingFile instanceof TFile) {
@@ -218,11 +206,7 @@ tags: [agent-client]
     let md = `**File**: \`${diff.path}\`\n\n`;
 
     // Check if this is a new file
-    if (
-      diff.oldText === null ||
-      diff.oldText === undefined ||
-      diff.oldText === ""
-    ) {
+    if (diff.oldText === null || diff.oldText === undefined || diff.oldText === "") {
       md += "```diff\n";
       diff.newText.split("\n").forEach((line) => {
         md += `+ ${line}\n`;
@@ -251,17 +235,11 @@ tags: [agent-client]
     return md;
   }
 
-  private convertPlanToMarkdown(
-    content: Extract<MessageContent, { type: "plan" }>,
-  ): string {
+  private convertPlanToMarkdown(content: Extract<MessageContent, { type: "plan" }>): string {
     let md = `> [!plan] Plan\n`;
     for (const entry of content.entries) {
       const status =
-        entry.status === "completed"
-          ? "✅"
-          : entry.status === "in_progress"
-            ? "🔄"
-            : "⏳";
+        entry.status === "completed" ? "✅" : entry.status === "in_progress" ? "🔄" : "⏳";
       md += `> ${status} ${entry.content}\n`;
     }
     md += `\n`;

@@ -60,9 +60,7 @@ export function detectMention(
       const closingBracketsPos = atIndex + 1 + closingBrackets + 1; // +1 for second ]
       if (cursorPosition > closingBracketsPos) {
         // Cursor is after ]], no longer a mention
-        logger.log(
-          "[DEBUG] Cursor is after closing ]], stopping mention detection",
-        );
+        logger.log("[DEBUG] Cursor is after closing ]], stopping mention detection");
         return null;
       }
       // Complete bracket format
@@ -72,11 +70,7 @@ export function detectMention(
   } else {
     // Simple @query format - use everything after @
     // But end at whitespace (space, tab, newline)
-    if (
-      afterAt.includes(" ") ||
-      afterAt.includes("\t") ||
-      afterAt.includes("\n")
-    ) {
+    if (afterAt.includes(" ") || afterAt.includes("\t") || afterAt.includes("\n")) {
       logger.log("[DEBUG] Mention ended by whitespace (simple format)");
       return null;
     }
@@ -129,9 +123,7 @@ export function extractMentionedNotes(
     seen.add(noteTitle);
 
     // Find the file by basename
-    const file = noteMentionService
-      .getAllFiles()
-      .find((f: TFile) => f.basename === noteTitle);
+    const file = noteMentionService.getAllFiles().find((f: TFile) => f.basename === noteTitle);
 
     result.push({ noteTitle, file });
   }

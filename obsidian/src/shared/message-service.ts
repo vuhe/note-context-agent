@@ -13,11 +13,7 @@
  */
 
 import type { IAgentClient } from "../domain/ports/agent-client.port";
-import type {
-  IVaultAccess,
-  NoteMetadata,
-  EditorPosition,
-} from "../domain/ports/vault-access.port";
+import type { IVaultAccess, NoteMetadata, EditorPosition } from "../domain/ports/vault-access.port";
 import type { AgentError } from "../domain/models/agent-error";
 import type { AuthenticationMethod } from "../domain/models/chat-session";
 import { extractMentionedNotes, type IMentionService } from "./mention-utils";
@@ -150,9 +146,7 @@ export async function prepareMessage(
         truncationNote = `\n\n[Note: This note was truncated. Original length: ${content.length} characters, showing first ${MAX_NOTE_LENGTH} characters]`;
       }
 
-      const absolutePath = input.vaultBasePath
-        ? `${input.vaultBasePath}/${file.path}`
-        : file.path;
+      const absolutePath = input.vaultBasePath ? `${input.vaultBasePath}/${file.path}` : file.path;
 
       const contextBlock = `<obsidian_mentioned_note ref="${absolutePath}">\n${processedContent}${truncationNote}\n</obsidian_mentioned_note>`;
       contextBlocks.push(contextBlock);
@@ -174,9 +168,7 @@ export async function prepareMessage(
 
   // Step 4: Build agent message (context blocks + original message)
   const agentMessage =
-    contextBlocks.length > 0
-      ? contextBlocks.join("\n") + "\n\n" + input.message
-      : input.message;
+    contextBlocks.length > 0 ? contextBlocks.join("\n") + "\n\n" + input.message : input.message;
 
   // Step 5: Build auto-mention context metadata
   const autoMentionContext =
@@ -221,10 +213,7 @@ async function buildAutoMentionContext(
     try {
       const content = await vaultAccess.readNote(notePath);
       const lines = content.split("\n");
-      const selectedLines = lines.slice(
-        selection.from.line,
-        selection.to.line + 1,
-      );
+      const selectedLines = lines.slice(selection.from.line, selection.to.line + 1);
       let selectedText = selectedLines.join("\n");
 
       let truncationNote = "";
@@ -313,8 +302,7 @@ async function handleSendError(
 
   if (isRateLimitError) {
     const errorMessage =
-      "message" in error &&
-      typeof (error as { message: unknown }).message === "string"
+      "message" in error && typeof (error as { message: unknown }).message === "string"
         ? (error as { message: string }).message
         : "Too many requests. Please try again later.";
 
@@ -385,8 +373,7 @@ async function handleSendError(
       title: "Authentication Required",
       message:
         "Authentication failed. Please check if you are logged into the agent or if your API key is correctly set.",
-      suggestion:
-        "Check your agent configuration in settings and ensure API keys are valid.",
+      suggestion: "Check your agent configuration in settings and ensure API keys are valid.",
       occurredAt: new Date(),
       sessionId,
       originalError: error,

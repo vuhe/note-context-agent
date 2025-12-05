@@ -1,8 +1,5 @@
 import { useState, useCallback } from "react";
-import type {
-  NoteMetadata,
-  IVaultAccess,
-} from "../domain/ports/vault-access.port";
+import type { NoteMetadata, IVaultAccess } from "../domain/ports/vault-access.port";
 
 export interface UseAutoMentionReturn {
   /** Currently active note for auto-mention */
@@ -32,9 +29,7 @@ export interface UseAutoMentionReturn {
  *
  * @param vaultAccess - Vault access port for getting the active note
  */
-export function useAutoMention(
-  vaultAccess: IVaultAccess,
-): UseAutoMentionReturn {
+export function useAutoMention(vaultAccess: IVaultAccess): UseAutoMentionReturn {
   const [activeNote, setActiveNote] = useState<NoteMetadata | null>(null);
   const [isDisabled, setIsDisabled] = useState(false);
 

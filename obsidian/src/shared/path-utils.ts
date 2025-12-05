@@ -9,10 +9,7 @@ export function resolveCommandDirectory(command: string): string | null {
   if (!command) {
     return null;
   }
-  const lastSlash = Math.max(
-    command.lastIndexOf("/"),
-    command.lastIndexOf("\\"),
-  );
+  const lastSlash = Math.max(command.lastIndexOf("/"), command.lastIndexOf("\\"));
   if (lastSlash <= 0) {
     return null;
   }

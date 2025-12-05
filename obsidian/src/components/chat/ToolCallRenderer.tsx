@@ -367,11 +367,7 @@ interface DiffRendererProps {
 function DiffRenderer({ diff, plugin }: DiffRendererProps) {
   // Simple line-based diff
   const renderDiff = () => {
-    if (
-      diff.oldText === null ||
-      diff.oldText === undefined ||
-      diff.oldText === ""
-    ) {
+    if (diff.oldText === null || diff.oldText === undefined || diff.oldText === "") {
       // New file
       return (
         <div className="tool-call-diff-new-file">

@@ -1,13 +1,6 @@
 import { useState, useCallback } from "react";
-import type {
-  NoteMetadata,
-  IVaultAccess,
-} from "../domain/ports/vault-access.port";
-import {
-  detectMention,
-  replaceMention,
-  type MentionContext,
-} from "../shared/mention-utils";
+import type { NoteMetadata, IVaultAccess } from "../domain/ports/vault-access.port";
+import { detectMention, replaceMention, type MentionContext } from "../shared/mention-utils";
 import type AgentClientPlugin from "../plugin";
 
 export interface UseMentionsReturn {

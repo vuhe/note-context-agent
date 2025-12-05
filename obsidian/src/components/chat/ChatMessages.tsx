@@ -73,8 +73,7 @@ export function ChatMessages({
 
     const threshold = 50;
     const isNearBottom =
-      container.scrollTop + container.clientHeight >=
-      container.scrollHeight - threshold;
+      container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
     setIsAtBottom(isNearBottom);
     return isNearBottom;
   }, []);
@@ -129,9 +128,7 @@ export function ChatMessages({
         </div>
       ) : messages.length === 0 ? (
         <div className="chat-empty-state">
-          {!isSessionReady
-            ? "Connecting to agent..."
-            : "Start a conversation with agent..."}
+          {!isSessionReady ? "Connecting to agent..." : "Start a conversation with agent..."}
         </div>
       ) : (
         <>

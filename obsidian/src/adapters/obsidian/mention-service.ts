@@ -23,9 +23,7 @@ export class NoteMentionService {
         }
       }),
     );
-    this.eventRefs.push(
-      this.plugin.app.vault.on("delete", () => this.rebuildIndex()),
-    );
+    this.eventRefs.push(this.plugin.app.vault.on("delete", () => this.rebuildIndex()));
     this.eventRefs.push(
       this.plugin.app.vault.on("rename", (file) => {
         if (file instanceof TFile && file.extension === "md") {
@@ -48,16 +46,11 @@ export class NoteMentionService {
   private rebuildIndex() {
     this.files = this.plugin.app.vault.getMarkdownFiles();
     this.lastBuild = Date.now();
-    this.logger.log(
-      `[NoteMentionService] Rebuilt index with ${this.files.length} files`,
-    );
+    this.logger.log(`[NoteMentionService] Rebuilt index with ${this.files.length} files`);
   }
 
   searchNotes(query: string): TFile[] {
-    this.logger.log(
-      "[DEBUG] NoteMentionService.searchNotes called with:",
-      query,
-    );
+    this.logger.log("[DEBUG] NoteMentionService.searchNotes called with:", query);
     this.logger.log("[DEBUG] Total files indexed:", this.files.length);
 
     if (!query.trim()) {
@@ -78,37 +71,28 @@ export class NoteMentionService {
     const fuzzySearch = prepareFuzzySearch(query.trim());
 
     // Score each file based on multiple fields
-    const scored: Array<{ file: TFile; score: number }> = this.files.map(
-      (file) => {
-        const basename = file.basename;
-        const path = file.path;
+    const scored: Array<{ file: TFile; score: number }> = this.files.map((file) => {
+      const basename = file.basename;
+      const path = file.path;
 
-        // Get aliases from frontmatter
-        const fileCache = this.plugin.app.metadataCache.getFileCache(file);
-        const aliases = fileCache?.frontmatter?.aliases as
-          | string[]
-          | string
-          | undefined;
-        const aliasArray: string[] = Array.isArray(aliases)
-          ? aliases
-          : aliases
-            ? [aliases]
-            : [];
+      // Get aliases from frontmatter
+      const fileCache = this.plugin.app.metadataCache.getFileCache(file);
+      const aliases = fileCache?.frontmatter?.aliases as string[] | string | undefined;
+      const aliasArray: string[] = Array.isArray(aliases) ? aliases : aliases ? [aliases] : [];
 
-        // Search in basename, path, and aliases
-        const searchFields = [basename, path, ...aliasArray];
-        let bestScore = -Infinity;
+      // Search in basename, path, and aliases
+      const searchFields = [basename, path, ...aliasArray];
+      let bestScore = -Infinity;
 
-        for (const field of searchFields) {
-          const match = fuzzySearch(field);
-          if (match && match.score > bestScore) {
-            bestScore = match.score;
-          }
+      for (const field of searchFields) {
+        const match = fuzzySearch(field);
+        if (match && match.score > bestScore) {
+          bestScore = match.score;
         }
+      }
 
-        return { file, score: bestScore };
-      },
-    );
+      return { file, score: bestScore };
+    });
 
     return scored
       .filter((item) => item.score > -Infinity)

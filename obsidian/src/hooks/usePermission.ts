@@ -1,8 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import type {
-  ChatMessage,
-  PermissionOption,
-} from "../domain/models/chat-message";
+import type { ChatMessage, PermissionOption } from "../domain/models/chat-message";
 import type { IAgentClient } from "../domain/ports/agent-client.port";
 import type { ErrorInfo } from "../domain/models/agent-error";
 
@@ -67,9 +64,7 @@ export interface UsePermissionReturn {
 /**
  * Find the active permission request from messages.
  */
-function findActivePermission(
-  messages: ChatMessage[],
-): ActivePermission | null {
+function findActivePermission(messages: ChatMessage[]): ActivePermission | null {
   for (const message of messages) {
     for (const content of message.content) {
       if (content.type === "tool_call") {
@@ -138,10 +133,7 @@ export function usePermission(
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
 
   // Find active permission from messages (derived state)
-  const activePermission = useMemo(
-    () => findActivePermission(messages),
-    [messages],
-  );
+  const activePermission = useMemo(() => findActivePermission(messages), [messages]);
 
   /**
    * Approve a specific permission request.
@@ -169,10 +161,7 @@ export function usePermission(
       return false;
     }
 
-    const option = selectOption(activePermission.options, [
-      "allow_once",
-      "allow_always",
-    ]);
+    const option = selectOption(activePermission.options, ["allow_once", "allow_always"]);
 
     if (!option) {
       return false;
@@ -193,9 +182,7 @@ export function usePermission(
     const option = selectOption(
       activePermission.options,
       ["reject_once", "reject_always"],
-      (opt) =>
-        opt.name.toLowerCase().includes("reject") ||
-        opt.name.toLowerCase().includes("deny"),
+      (opt) => opt.name.toLowerCase().includes("reject") || opt.name.toLowerCase().includes("deny"),
     );
 
     if (!option) {

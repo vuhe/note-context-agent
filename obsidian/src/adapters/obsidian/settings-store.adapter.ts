@@ -61,9 +61,7 @@ export class SettingsStore implements ISettingsAccess {
    * @param updates - Partial settings object with properties to update
    * @returns Promise that resolves when settings are saved
    */
-  async updateSettings(
-    updates: Partial<AgentClientPluginSettings>,
-  ): Promise<void> {
+  async updateSettings(updates: Partial<AgentClientPluginSettings>): Promise<void> {
     const next = { ...this.state, ...updates };
     this.state = next;
 

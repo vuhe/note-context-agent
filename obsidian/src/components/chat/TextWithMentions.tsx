@@ -35,10 +35,7 @@ export function TextWithMentions({
         key="auto-mention"
         className="text-mention"
         onClick={() => {
-          void plugin.app.workspace.openLinkText(
-            autoMentionContext.notePath,
-            "",
-          );
+          void plugin.app.workspace.openLinkText(autoMentionContext.notePath, "");
         }}
       >
         {displayText}
@@ -60,9 +57,7 @@ export function TextWithMentions({
     const noteName = match[1];
 
     // Check if file actually exists
-    const file = plugin.app.vault
-      .getMarkdownFiles()
-      .find((f) => f.basename === noteName);
+    const file = plugin.app.vault.getMarkdownFiles().find((f) => f.basename === noteName);
 
     if (file) {
       // File exists - render as clickable mention

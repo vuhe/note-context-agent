@@ -83,9 +83,7 @@ export default class AgentClientPlugin extends Plugin {
       const viewContainerEl = leaf.view?.containerEl;
       if (viewContainerEl) {
         window.setTimeout(() => {
-          const textarea = viewContainerEl.querySelector(
-            "textarea.chat-input-textarea",
-          );
+          const textarea = viewContainerEl.querySelector("textarea.chat-input-textarea");
           if (textarea instanceof HTMLTextAreaElement) {
             textarea.focus();
           }
@@ -156,10 +154,7 @@ export default class AgentClientPlugin extends Plugin {
   }
 
   async loadSettings() {
-    const rawSettings = ((await this.loadData()) ?? {}) as Record<
-      string,
-      unknown
-    >;
+    const rawSettings = ((await this.loadData()) ?? {}) as Record<string, unknown>;
 
     // Simplified settings loading - only core settings remain
     this.settings = {

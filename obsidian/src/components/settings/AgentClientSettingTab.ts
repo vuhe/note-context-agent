@@ -20,12 +20,10 @@ export class AgentClientSettingTab extends PluginSettingTab {
         "Automatically allow all permission requests from agents. ⚠️ Use with caution - this gives agents full access to your system.",
       )
       .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.autoAllowPermissions)
-          .onChange(async (value) => {
-            this.plugin.settings.autoAllowPermissions = value;
-            await this.plugin.saveSettings();
-          }),
+        toggle.setValue(this.plugin.settings.autoAllowPermissions).onChange(async (value) => {
+          this.plugin.settings.autoAllowPermissions = value;
+          await this.plugin.saveSettings();
+        }),
       );
 
     new Setting(containerEl)
@@ -34,28 +32,22 @@ export class AgentClientSettingTab extends PluginSettingTab {
         "Include the current note in your messages automatically. The agent will have access to its content without typing @notename.",
       )
       .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.autoMentionActiveNote)
-          .onChange(async (value) => {
-            this.plugin.settings.autoMentionActiveNote = value;
-            await this.plugin.saveSettings();
-          }),
+        toggle.setValue(this.plugin.settings.autoMentionActiveNote).onChange(async (value) => {
+          this.plugin.settings.autoMentionActiveNote = value;
+          await this.plugin.saveSettings();
+        }),
       );
 
     new Setting(containerEl).setName("Developer").setHeading();
 
     new Setting(containerEl)
       .setName("Debug mode")
-      .setDesc(
-        "Enable debug logging to console. Useful for development and troubleshooting.",
-      )
+      .setDesc("Enable debug logging to console. Useful for development and troubleshooting.")
       .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.debugMode)
-          .onChange(async (value) => {
-            this.plugin.settings.debugMode = value;
-            await this.plugin.saveSettings();
-          }),
+        toggle.setValue(this.plugin.settings.debugMode).onChange(async (value) => {
+          this.plugin.settings.debugMode = value;
+          await this.plugin.saveSettings();
+        }),
       );
   }
 }
