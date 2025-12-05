@@ -1,28 +1,30 @@
 import type AgentClientPlugin from "../plugin";
 
 export class Logger {
-  constructor(private plugin: AgentClientPlugin) {}
+  private readonly debugMode: boolean = true;
+
+  constructor(plugin: AgentClientPlugin | null = null) {}
 
   log(...args: unknown[]): void {
-    if (this.plugin.settings.debugMode) {
+    if (this.debugMode) {
       console.debug(...args);
     }
   }
 
   error(...args: unknown[]): void {
-    if (this.plugin.settings.debugMode) {
+    if (this.debugMode) {
       console.error(...args);
     }
   }
 
   warn(...args: unknown[]): void {
-    if (this.plugin.settings.debugMode) {
+    if (this.debugMode) {
       console.warn(...args);
     }
   }
 
   info(...args: unknown[]): void {
-    if (this.plugin.settings.debugMode) {
+    if (this.debugMode) {
       console.debug(...args);
     }
   }

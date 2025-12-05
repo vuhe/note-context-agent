@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    // --- 核心编译选项 ---
+    "target": "ES2020", // 现代 Node.js 支持 ES2020 或更高版本
+    "module": "ESNext", // Node.js 项目通常使用 CommonJS 或 ESNext
+    "moduleResolution": "node",
+    "lib": ["ES2020"], // 只需要 Node.js 环境的 JS 标准库
+
+    // --- 类型检查/辅助选项 ---
+    "strict": true, // 开启所有严格模式检查
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "importHelpers": true,
+    "isolatedModules": true, // 有助于打包工具正确处理
+    "allowJs": true,
+
+    // --- 源码地图和基准目录 ---
+    "baseUrl": ".",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+
+    // --- note-agent 源码解析 ---
+    "paths": {
+      "note-agent": ["note-agent/src"]
+    }
+  },
+  "exclude": ["node_modules", "**/dist"],
+}

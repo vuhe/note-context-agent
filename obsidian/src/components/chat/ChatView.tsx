@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, Platform, Notice } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice } from "obsidian";
 import * as React from "react";
 const { useState, useRef, useEffect, useMemo, useCallback } = React;
 import { createRoot, Root } from "react-dom/client";
@@ -50,13 +50,6 @@ function ChatComponent({
   plugin: AgentClientPlugin;
   view: ChatView;
 }) {
-  // ============================================================
-  // Platform Check
-  // ============================================================
-  if (!Platform.isDesktopApp) {
-    throw new Error("Agent Client is only available on desktop");
-  }
-
   // ============================================================
   // Memoized Services & Adapters
   // ============================================================

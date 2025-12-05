@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-agent-client",
+  "name": "obsidian-note-agent",
   "version": "0.3.1",
   "description": "Use AI coding agents via the Agent Client Protocol directly inside Obsidian",
   "main": "main.js",
@@ -30,7 +30,10 @@
     "@agentclientprotocol/sdk": "^0.5.1",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.7",
+    "eventemitter3": "^5.0.1",
+    "note-agent": "workspace:*",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "zustand": "^5.0.9"
   }
 }
