@@ -1,6 +1,12 @@
 import * as acp from "@agentclientprotocol/sdk";
 
 export class NoteContextAgent implements acp.Agent {
+  private connection: acp.AgentSideConnection;
+
+  constructor(connection: acp.AgentSideConnection, obsidian: boolean) {
+    this.connection = connection;
+  }
+
   async initialize(params: acp.InitializeRequest): Promise<acp.InitializeResponse> {
     throw new Error("Not implemented.");
   }
