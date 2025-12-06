@@ -176,10 +176,4 @@ export default class AgentClientPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
   }
-
-  async saveSettingsAndNotify(nextSettings: AgentClientPluginSettings) {
-    this.settings = nextSettings;
-    await this.saveData(this.settings);
-    this.settingsStore.set(this.settings);
-  }
 }

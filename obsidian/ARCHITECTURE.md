@@ -49,7 +49,7 @@ src/
 │   │   ├── ToolCallRenderer.tsx
 │   │   ├── TerminalRenderer.tsx
 │   │   ├── PermissionRequestSection.tsx
-│   │   ├── SuggestionDropdown.tsx
+│   │   ├── PermissionDropdown.tsx
 │   │   ├── CollapsibleThought.tsx
 │   │   ├── MarkdownTextRenderer.tsx
 │   │   ├── TextWithMentions.tsx

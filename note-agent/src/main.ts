@@ -1,10 +1,11 @@
 import * as acp from "@agentclientprotocol/sdk";
 
 export class NoteContextAgent implements acp.Agent {
-  private connection: acp.AgentSideConnection;
+  private readonly connection: acp.AgentSideConnection;
 
   constructor(connection: acp.AgentSideConnection, obsidian: boolean) {
     this.connection = connection;
+    // TODO: 确定文件系统工具集，node环境和obsidian不一样
   }
 
   async initialize(params: acp.InitializeRequest): Promise<acp.InitializeResponse> {
@@ -48,12 +49,14 @@ export class NoteContextAgent implements acp.Agent {
     throw new Error("Not implemented.");
   }
 
-  async authenticate(params: acp.AuthenticateRequest) {
-    throw new Error("Not implemented.");
+  async authenticate(_: acp.AuthenticateRequest) {
+    return {}; // 此工具不需要鉴权
   }
 
   async prompt(params: acp.PromptRequest): Promise<acp.PromptResponse> {
-    throw new Error("Not implemented.");
+    // TODO: 这是核心实现，对一个提示词进行回复，期间进行多轮调用
+    // TODO: 如果健全出现问题，那么应该返回 refusal
+    return { stopReason: "end_turn" };
   }
 
   async cancel(params: acp.CancelNotification) {
@@ -62,5 +65,9 @@ export class NoteContextAgent implements acp.Agent {
 
   async extMethod?(method: string, params: Record<string, unknown>) {
     return {};
+  }
+
+  async extNotification?(method: string, params: Record<string, unknown>) {
+    // TODO: 设置context文件专用方法
   }
 }

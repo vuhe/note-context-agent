@@ -1,18 +1,19 @@
 import * as React from "react";
 const { useRef, useEffect } = React;
-import { Component, MarkdownRenderer, type App } from "obsidian";
+import { Component, MarkdownRenderer } from "obsidian";
+import { useNoteAgent } from "../../adapters/note-agent";
 
 interface MarkdownTextRendererProps {
   text: string;
-  app: App;
 }
 
-export function MarkdownTextRenderer({ text, app }: MarkdownTextRendererProps) {
+export function MarkdownTextRenderer({ text }: MarkdownTextRendererProps) {
+  const app = useNoteAgent(s => s.obsidianApp)();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || !app) return;
     el.empty?.();
     el.classList.add("markdown-rendered");
 

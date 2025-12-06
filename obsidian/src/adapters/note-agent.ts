@@ -3,33 +3,53 @@ import { create } from "zustand";
 import { NoteContextAgent } from "note-agent";
 import EventEmitter from "eventemitter3";
 import { Logger } from "../shared/logger";
-import { Platform } from "obsidian";
+import { App, Platform, Plugin } from "obsidian";
+import { ChatMessage } from "./chat-message";
 
 export interface INoteAgent extends acp.Client {
+  // 用于插件加载检测等
   isInitialized: boolean;
+  obsidian: Plugin | undefined;
 
   // 用于连接后端服务
   backend: acp.Agent | null;
   clientConnection: acp.ClientSideConnection | null;
   agentConnection: acp.AgentSideConnection | null;
 
+  // UI 渲染状态
+  sessionId: string;
+  title: string;
+  messages: ChatMessage[];
+
   // 权限请求和权限回复通知
   permission: acp.RequestPermissionRequest | null;
   permissionEvent: EventEmitter;
 
-  initialize(): Promise<void>;
-  responsePermission(params: acp.RequestPermissionResponse): void;
+  // getter
+  obsidianApp: () => App | undefined;
+
+  // 客户端调用
+  initialize: (plugin: Plugin) => Promise<void>;
+  responsePermission: (params: acp.RequestPermissionResponse) => void;
 }
 
 export const useNoteAgent = create<INoteAgent>((set, get) => ({
   isInitialized: false,
+  obsidian: undefined,
   backend: null,
   clientConnection: null,
   agentConnection: null,
+  sessionId: "",
+  title: "note-agent",
+  messages: [],
   permission: null,
   permissionEvent: new EventEmitter(),
 
-  initialize: async () => {
+  obsidianApp: () => {
+    return get().obsidian?.app
+  },
+
+  initialize: async (plugin) => {
     if (get().isInitialized) {
       return; // 初始化连接仅在没有连接时进行
     }
@@ -63,7 +83,7 @@ export const useNoteAgent = create<INoteAgent>((set, get) => ({
     // 此处为协议要求的流程请求，由于前后端统一，因此不检查 agent 返回值
     await clientConnection.initialize({
       _meta: {
-        obsidianMobile: Platform.isMobile
+        obsidianMobile: Platform.isMobile,
       },
       protocolVersion: acp.PROTOCOL_VERSION,
       clientCapabilities: {
@@ -80,13 +100,17 @@ export const useNoteAgent = create<INoteAgent>((set, get) => ({
     });
 
     // 初始化完成，标记为资源准备完毕
-    set({ isInitialized: true });
+    set({ isInitialized: true, obsidian: plugin });
   },
 
   sessionUpdate: async (params) => {
     const update = params.update;
     Logger.log("[AcpAdapter] sessionUpdate:", update);
 
+    // const arr = [{}, {}]
+    // const arr3 = arr.slice(0, -1)
+    // const arr2 = [...arr3, {}]
+    // console.log(Object.is(arr[0], arr2[0]));
     switch (update.sessionUpdate) {
       case "user_message_chunk":
         break;
@@ -159,27 +183,23 @@ export const useNoteAgent = create<INoteAgent>((set, get) => ({
         // });
         break;
 
-      case "plan":
-        // this.updateLastMessage({
-        //   type: "plan",
-        //   entries: update.entries,
-        // });
+      case "plan": {
+        let title: string | null = null;
+        const titleFromMeta = update._meta?.context;
+        const titleFromPlan = update.entries.first()?.content;
+        if (typeof titleFromMeta === "string") {
+          title = titleFromMeta;
+        } else if (typeof titleFromPlan === "string") {
+          title = titleFromPlan;
+        }
+        if (title != null) {
+          set({ title: title });
+        }
         break;
+      }
 
       case "available_commands_update": {
-        Logger.log(`[AcpAdapter] available_commands_update, commands:`, update.availableCommands);
-
-        // const commands: SlashCommand[] = (update.availableCommands || []).map(
-        //   (cmd) => ({
-        //     name: cmd.name,
-        //     description: cmd.description,
-        //     hint: cmd.input?.hint ?? null,
-        //   }),
-        // );
-
-        // if (this.updateAvailableCommandsCallback) {
-        //   this.updateAvailableCommandsCallback(commands);
-        // }
+        Logger.log("[AcpAdapter] ignore commands");
         break;
       }
 
@@ -206,9 +226,5 @@ export const useNoteAgent = create<INoteAgent>((set, get) => ({
 
   readTextFile: async (params) => {
     return { content: "" };
-  },
-
-  extNotification: async (params) => {
-    // 用于历史记录拉去的回调，agent会以通知的形式回传历史记录
   },
 }));

@@ -1,14 +1,12 @@
 import * as React from "react";
 const { useState } = React;
-import type AgentClientPlugin from "../../plugin";
 import { MarkdownTextRenderer } from "./MarkdownTextRenderer";
 
 interface CollapsibleThoughtProps {
   text: string;
-  plugin: AgentClientPlugin;
 }
 
-export function CollapsibleThought({ text, plugin }: CollapsibleThoughtProps) {
+export function CollapsibleThought({ text }: CollapsibleThoughtProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -19,7 +17,7 @@ export function CollapsibleThought({ text, plugin }: CollapsibleThoughtProps) {
       </div>
       {isExpanded && (
         <div className="collapsible-thought-content">
-          <MarkdownTextRenderer text={text} app={plugin.app} />
+          <MarkdownTextRenderer text={text} />
         </div>
       )}
     </div>

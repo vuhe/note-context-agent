@@ -46,62 +46,29 @@ export type ToolKind =
  * Content that can be included in a tool call result.
  * Currently supports diffs.
  */
-export type ToolCallContent = DiffContent;
+export type ToolCallContent =
+  | {
+      type: "content";
+      content: ToolCallMessage;
+    }
+  | {
+      type: "diff";
+      path: string;
+      newText: string;
+      oldText?: string | null; // null or undefined for new files
+    };
 
-/**
- * Represents a file modification with before/after content.
- */
-export interface DiffContent {
-  type: "diff";
-  path: string;
-  newText: string;
-  oldText?: string | null; // null or undefined for new files
-}
-
-// ============================================================================
-// Supporting Types
-// ============================================================================
-
-/**
- * Location information for tool operations (e.g., which file/line was affected).
- */
-export interface ToolCallLocation {
-  path: string;
-  line?: number | null; // null if the entire file is affected
-}
-
-/**
- * User's choice for permission requests.
- */
-export interface PermissionOption {
-  optionId: string;
-  name: string;
-  kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
-}
-
-/**
- * Entry in an agent's plan/task list.
- */
-export interface PlanEntry {
-  content: string;
-  status: "pending" | "in_progress" | "completed";
-  priority: "high" | "medium" | "low";
-}
-
-/**
- * Update notification for an ongoing tool call.
- * Used in permission requests to show what operation is being requested.
- */
-export interface ToolCallUpdate {
-  toolCallId: string;
-  title?: string | null;
-  status?: ToolCallStatus | null;
-  kind?: ToolKind | null;
-  content?: ToolCallContent[] | null;
-  locations?: ToolCallLocation[] | null;
-  rawInput?: { [k: string]: unknown }; // Tool's input parameters
-  rawOutput?: { [k: string]: unknown }; // Tool's output data
-}
+export type ToolCallMessage =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "image";
+      data: string; // Base64 encoded image data
+      mimeType: string; // e.g., "image/png"
+      uri?: string; // Optional source URI
+    };
 
 // ============================================================================
 // Chat Message
@@ -116,8 +83,7 @@ export interface ToolCallUpdate {
 export interface ChatMessage {
   id: string;
   role: Role;
-  content: MessageContent[];
-  timestamp: Date;
+  content: MessageContent;
 }
 
 /**
@@ -136,18 +102,18 @@ export type MessageContent =
       type: "text";
       text: string;
     }
-  | {
-      type: "text_with_context";
-      text: string;
-      autoMentionContext?: {
-        noteName: string;
-        notePath: string;
-        selection?: {
-          fromLine: number;
-          toLine: number;
-        };
-      };
-    }
+  // | {
+  //     type: "text_with_context";
+  //     text: string;
+  //     autoMentionContext?: {
+  //       noteName: string;
+  //       notePath: string;
+  //       selection?: {
+  //         fromLine: number;
+  //         toLine: number;
+  //       };
+  //     };
+  //   }
   | {
       type: "agent_thought";
       text: string;
@@ -160,31 +126,9 @@ export type MessageContent =
     }
   | {
       type: "tool_call";
-      toolCallId: string;
       title?: string | null;
       status: ToolCallStatus;
       kind?: ToolKind;
-      content?: ToolCallContent[];
-      locations?: ToolCallLocation[];
-      rawInput?: { [k: string]: unknown };
-      rawOutput?: { [k: string]: unknown };
-      permissionRequest?: {
-        requestId: string;
-        options: PermissionOption[];
-        selectedOptionId?: string;
-        isCancelled?: boolean;
-        isActive?: boolean;
-      };
-    }
-  | {
-      type: "plan";
-      entries: PlanEntry[];
-    }
-  | {
-      type: "permission_request";
-      toolCall: ToolCallUpdate;
-      options: PermissionOption[];
-      selectedOptionId?: string;
-      isCancelled?: boolean;
-      isActive?: boolean;
+      content?: ToolCallContent;
+      locationPath?: string;
     };

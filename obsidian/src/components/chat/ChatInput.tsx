@@ -9,7 +9,7 @@ import type { SlashCommand } from "../../domain/models/chat-session";
 import type { UseMentionsReturn } from "../../hooks/useMentions";
 import type { UseSlashCommandsReturn } from "../../hooks/useSlashCommands";
 import type { UseAutoMentionReturn } from "../../hooks/useAutoMention";
-import { SuggestionDropdown } from "./SuggestionDropdown";
+import { SuggestionDropdown } from "./PermissionDropdown";
 import { Logger } from "../../shared/logger";
 
 /**

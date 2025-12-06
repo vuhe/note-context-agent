@@ -17,7 +17,7 @@ import { NoteMentionService } from "../../adapters/obsidian/mention-service";
 import { Logger } from "../../shared/logger";
 
 // Adapter imports
-import { AcpAdapter, type IAcpClient } from "../../adapters/acp/acp.adapter";
+import { AcpAdapter } from "../../adapters/acp/acp.adapter";
 import { ObsidianVaultAdapter } from "../../adapters/obsidian/vault.adapter";
 
 // Hooks imports
@@ -47,8 +47,6 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
   // ============================================================
   // Memoized Services & Adapters
   // ============================================================
-  const logger = useMemo(() => new Logger(plugin), [plugin]);
-
   const vaultPath = useMemo(() => {
     return (plugin.app.vault.adapter as VaultAdapterWithBasePath).basePath || process.cwd();
   }, [plugin]);
@@ -63,7 +61,6 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
   }, [noteMentionService]);
 
   const acpAdapter = useMemo(() => new AcpAdapter(plugin), [plugin]);
-  const acpClientRef = useRef<IAcpClient>(acpAdapter);
 
   const vaultAccessAdapter = useMemo(() => {
     return new ObsidianVaultAdapter(plugin, noteMentionService);
@@ -114,12 +111,12 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
       return;
     }
 
-    logger.log("[Debug] Creating new session...");
+    Logger.log("[Debug] Creating new session...");
 
     autoMention.toggle(false);
     chat.clearMessages();
     await agentSession.restartSession();
-  }, [messages, session, logger, autoMention, chat, agentSession]);
+  }, [messages, session, autoMention, chat, agentSession]);
 
   const handleOpenSettings = useCallback(() => {
     const appWithSettings = plugin.app as unknown as AppWithSettings;
@@ -139,7 +136,7 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
   );
 
   const handleStopGeneration = useCallback(async () => {
-    logger.log("Cancelling current operation...");
+    Logger.log("Cancelling current operation...");
     // Save last user message before cancel (to restore it)
     const lastMessage = chat.lastUserMessage;
     await agentSession.cancelOperation();
@@ -147,7 +144,7 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
     if (lastMessage) {
       setRestoredMessage(lastMessage);
     }
-  }, [logger, agentSession, chat.lastUserMessage]);
+  }, [agentSession, chat.lastUserMessage]);
 
   const handleClearError = useCallback(() => {
     chat.clearError();
@@ -162,7 +159,7 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
   // ============================================================
   // Initialize session on mount or when agent changes
   useEffect(() => {
-    logger.log("[Debug] Starting connection setup via useAgentSession...");
+    Logger.log("[Debug] Starting connection setup via useAgentSession...");
     void agentSession.createSession();
   }, [agentSession.createSession]);
 
@@ -177,7 +174,7 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
   // Cleanup on unmount only - close session
   useEffect(() => {
     return () => {
-      logger.log("[ChatView] Cleanup: close session");
+      Logger.log("[ChatView] Cleanup: close session");
       // Use refs to get latest values (avoid stale closures)
       void (async () => {
         await closeSessionRef.current();
@@ -309,10 +306,7 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
         isSending={isSending}
         isSessionReady={isSessionReady}
         errorInfo={errorInfo}
-        plugin={plugin}
         view={view}
-        acpClient={acpClientRef.current}
-        onApprovePermission={permission.approvePermission}
         onClearError={handleClearError}
       />
 
@@ -368,7 +362,7 @@ export class ChatView extends ItemView {
   }
 
   onClose(): Promise<void> {
-    this.logger.log("[ChatView] onClose() called");
+    Logger.log("[ChatView] onClose() called");
     // Cleanup is handled by React useEffect cleanup in ChatComponent
     // which performs auto-export and closeSession
     if (this.root) {

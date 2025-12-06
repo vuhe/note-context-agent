@@ -1,11 +1,9 @@
 import * as React from "react";
 const { useRef, useState, useEffect, useCallback } = React;
 
-import type { ChatMessage } from "../../domain/models/chat-message";
-import type { IAcpClient } from "../../adapters/acp/acp.adapter";
-import type AgentClientPlugin from "../../plugin";
+import type { ChatMessage } from "../../adapters/chat-message";
 import type { ChatView } from "./ChatView";
-import { MessageRenderer } from "./MessageRenderer";
+import { MessageRenderer } from "../message/MessageRenderer";
 
 /**
  * Error information to display
@@ -28,14 +26,8 @@ export interface ChatMessagesProps {
   isSessionReady: boolean;
   /** Error information (if any) */
   errorInfo: ErrorInfo | null;
-  /** Plugin instance */
-  plugin: AgentClientPlugin;
   /** View instance for event registration */
   view: ChatView;
-  /** ACP client for terminal operations */
-  acpClient?: IAcpClient;
-  /** Callback to approve a permission request */
-  onApprovePermission?: (requestId: string, optionId: string) => Promise<void>;
   /** Callback to clear the error */
   onClearError: () => void;
 }
@@ -55,10 +47,7 @@ export function ChatMessages({
   isSending,
   isSessionReady,
   errorInfo,
-  plugin,
   view,
-  acpClient,
-  onApprovePermission,
   onClearError,
 }: ChatMessagesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -133,13 +122,7 @@ export function ChatMessages({
       ) : (
         <>
           {messages.map((message) => (
-            <MessageRenderer
-              key={message.id}
-              message={message}
-              plugin={plugin}
-              acpClient={acpClient}
-              onApprovePermission={onApprovePermission}
-            />
+            <MessageRenderer message={message} />
           ))}
           {isSending && (
             <div className="loading-indicator">

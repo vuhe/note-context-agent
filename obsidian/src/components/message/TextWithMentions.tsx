@@ -1,9 +1,8 @@
 import * as React from "react";
-import type AgentClientPlugin from "../../plugin";
+import { useNoteAgent } from "../../adapters/note-agent";
 
 interface TextWithMentionsProps {
   text: string;
-  plugin: AgentClientPlugin;
   autoMentionContext?: {
     noteName: string;
     notePath: string;
@@ -17,12 +16,12 @@ interface TextWithMentionsProps {
 // Function to render text with @mentions and optional auto-mention
 export function TextWithMentions({
   text,
-  plugin,
   autoMentionContext,
 }: TextWithMentionsProps): React.ReactElement {
   // Match @[[filename]] format only
   const mentionRegex = /@\[\[([^\]]+)\]\]/g;
   const parts: React.ReactNode[] = [];
+  const app = useNoteAgent((s) => s.obsidianApp)();
 
   // Add auto-mention badge first if provided
   if (autoMentionContext) {
@@ -35,7 +34,7 @@ export function TextWithMentions({
         key="auto-mention"
         className="text-mention"
         onClick={() => {
-          void plugin.app.workspace.openLinkText(autoMentionContext.notePath, "");
+          void app?.workspace.openLinkText(autoMentionContext.notePath, "");
         }}
       >
         {displayText}
@@ -57,7 +56,7 @@ export function TextWithMentions({
     const noteName = match[1];
 
     // Check if file actually exists
-    const file = plugin.app.vault.getMarkdownFiles().find((f) => f.basename === noteName);
+    const file = app?.vault.getMarkdownFiles().find((f) => f.basename === noteName);
 
     if (file) {
       // File exists - render as clickable mention
@@ -66,7 +65,7 @@ export function TextWithMentions({
           key={match.index}
           className="text-mention"
           onClick={() => {
-            void plugin.app.workspace.openLinkText(file.path, "");
+            void app?.workspace.openLinkText(file.path, "");
           }}
         >
           @{noteName}
