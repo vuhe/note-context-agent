@@ -6,7 +6,7 @@ import { Logger } from "../shared/logger";
 import { App, Platform, Plugin } from "obsidian";
 import { ChatMessage } from "./chat-message";
 
-export interface INoteAgent extends acp.Client {
+interface INoteAgent extends acp.Client {
   // 用于插件加载检测等
   isInitialized: boolean;
   obsidian: Plugin | undefined;
@@ -30,7 +30,7 @@ export interface INoteAgent extends acp.Client {
 
   // 客户端调用
   initialize: (plugin: Plugin) => Promise<void>;
-  responsePermission: (params: acp.RequestPermissionResponse) => void;
+  responsePermission: (params: acp.RequestPermissionOutcome) => void;
 }
 
 export const useNoteAgent = create<INoteAgent>((set, get) => ({
@@ -46,7 +46,7 @@ export const useNoteAgent = create<INoteAgent>((set, get) => ({
   permissionEvent: new EventEmitter(),
 
   obsidianApp: () => {
-    return get().obsidian?.app
+    return get().obsidian?.app;
   },
 
   initialize: async (plugin) => {
@@ -217,14 +217,14 @@ export const useNoteAgent = create<INoteAgent>((set, get) => ({
 
   responsePermission: (params) => {
     set({ permission: null });
-    get().permissionEvent.emit("responsePermission", params);
+    get().permissionEvent.emit("responsePermission", { outcome: params });
   },
 
-  writeTextFile: async (params) => {
+  writeTextFile: async (_params) => {
     return {};
   },
 
-  readTextFile: async (params) => {
+  readTextFile: async (_params) => {
     return { content: "" };
   },
 }));

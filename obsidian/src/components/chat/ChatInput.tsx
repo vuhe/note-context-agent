@@ -1,16 +1,14 @@
 import * as React from "react";
-const { useRef, useState, useEffect, useCallback, useMemo } = React;
+const { useRef, useState, useEffect, useCallback } = React;
 import { setIcon } from "obsidian";
 
-import type AgentClientPlugin from "../../plugin";
-import type { ChatView } from "./ChatView";
 import type { NoteMetadata } from "../../domain/ports/vault-access.port";
 import type { SlashCommand } from "../../domain/models/chat-session";
 import type { UseMentionsReturn } from "../../hooks/useMentions";
 import type { UseSlashCommandsReturn } from "../../hooks/useSlashCommands";
 import type { UseAutoMentionReturn } from "../../hooks/useAutoMention";
-import { SuggestionDropdown } from "./PermissionDropdown";
 import { Logger } from "../../shared/logger";
+import { useNoteAgent } from "../../adapters/note-agent";
 
 /**
  * Props for ChatInput component
@@ -32,10 +30,6 @@ export interface ChatInputProps {
   slashCommands: UseSlashCommandsReturn;
   /** Auto-mention hook state and methods */
   autoMention: UseAutoMentionReturn;
-  /** Plugin instance */
-  plugin: AgentClientPlugin;
-  /** View instance for event registration */
-  view: ChatView;
   /** Callback to send a message */
   onSendMessage: (content: string) => Promise<void>;
   /** Callback to stop the current generation */
@@ -65,14 +59,10 @@ export function ChatInput({
   mentions,
   slashCommands,
   autoMention,
-  plugin,
-  view,
   onSendMessage,
   onStopGeneration,
   onRestoredMessageConsumed,
 }: ChatInputProps) {
-  const logger = useMemo(() => new Logger(plugin), [plugin]);
-
   // Local state
   const [inputValue, setInputValue] = useState("");
   const [hintText, setHintText] = useState<string | null>(null);
@@ -314,7 +304,7 @@ export function ChatInput({
       const newValue = e.target.value;
       const cursorPosition = e.target.selectionStart || 0;
 
-      logger.log("[DEBUG] Input changed:", newValue, "cursor:", cursorPosition);
+      Logger.log("[DEBUG] Input changed:", newValue, "cursor:", cursorPosition);
 
       setInputValue(newValue);
 
@@ -333,7 +323,7 @@ export function ChatInput({
       // Update slash command suggestions
       slashCommands.updateSuggestions(newValue, cursorPosition);
     },
-    [logger, hintText, commandText, mentions, slashCommands],
+    [hintText, commandText, mentions, slashCommands],
   );
 
   // Adjust textarea height when input changes
@@ -394,74 +384,29 @@ export function ChatInput({
   // Placeholder text
   const placeholder = `Message agent - @ to mention notes${availableCommands.length > 0 ? ", / for commands" : ""}`;
 
+  const permission = useNoteAgent((s) => s.permission);
+  const respPermission = useNoteAgent((s) => s.responsePermission);
+
   return (
     <div className="chat-input-container">
       <div className="chat-input-wrapper">
-        {/* Mention Dropdown */}
-        {(() => {
-          logger.log("[DEBUG] Dropdown render check:", {
-            isOpen: mentions.isOpen,
-            suggestionsCount: mentions.suggestions.length,
-            selectedIndex: mentions.selectedIndex,
-          });
-          return null;
-        })()}
-        {mentions.isOpen && (
-          <SuggestionDropdown
-            type="mention"
-            items={mentions.suggestions}
-            selectedIndex={mentions.selectedIndex}
-            onSelect={selectMention}
-            onClose={mentions.close}
-            plugin={plugin}
-            view={view}
-          />
-        )}
-
-        {/* Slash Command Dropdown */}
-        {slashCommands.isOpen && (
-          <SuggestionDropdown
-            type="slash-command"
-            items={slashCommands.suggestions}
-            selectedIndex={slashCommands.selectedIndex}
-            onSelect={handleSelectSlashCommand}
-            onClose={slashCommands.close}
-            plugin={plugin}
-            view={view}
-          />
-        )}
-
-        {/* Auto-mention Badge */}
-        {autoMentionEnabled && autoMention.activeNote && (
+        {/* Request Permission Badge */}
+        {permission && (
           <div className="auto-mention-inline">
             <span className={`mention-badge ${autoMention.isDisabled ? "disabled" : ""}`}>
-              @{autoMention.activeNote.name}
-              {autoMention.activeNote.selection && (
-                <span className="selection-indicator">
-                  {":"}
-                  {autoMention.activeNote.selection.from.line + 1}-
-                  {autoMention.activeNote.selection.to.line + 1}
-                </span>
-              )}
+              权限请求
             </span>
-            <button
-              className="auto-mention-toggle-btn"
-              onClick={(e) => {
-                const newDisabledState = !autoMention.isDisabled;
-                autoMention.toggle(newDisabledState);
-                const iconName = newDisabledState ? "x" : "plus";
-                setIcon(e.currentTarget, iconName);
-              }}
-              title={
-                autoMention.isDisabled ? "Enable auto-mention" : "Temporarily disable auto-mention"
-              }
-              ref={(el) => {
-                if (el) {
-                  const iconName = autoMention.isDisabled ? "plus" : "x";
-                  setIcon(el, iconName);
-                }
-              }}
-            />
+            <div className="message-permission-request-options">
+              {permission.options.map((option) => (
+                <button
+                  key={option.optionId}
+                  className={`permission-option ${option.kind ? `permission-kind-${option.kind}` : ""}`}
+                  onClick={() => respPermission({ outcome: "selected", optionId: option.optionId })}
+                >
+                  {option.name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

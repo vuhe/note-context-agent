@@ -319,8 +319,6 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
         mentions={mentions}
         slashCommands={slashCommands}
         autoMention={autoMention}
-        plugin={plugin}
-        view={view}
         onSendMessage={handleSendMessage}
         onStopGeneration={handleStopGeneration}
         onRestoredMessageConsumed={handleRestoredMessageConsumed}
