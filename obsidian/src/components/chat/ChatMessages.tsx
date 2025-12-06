@@ -1,35 +1,16 @@
 import * as React from "react";
 const { useRef, useState, useEffect, useCallback } = React;
 
-import type { ChatMessage } from "../../adapters/chat-message";
 import type { ChatView } from "./ChatView";
 import { MessageRenderer } from "../message/MessageRenderer";
-
-/**
- * Error information to display
- */
-export interface ErrorInfo {
-  title: string;
-  message: string;
-  suggestion?: string;
-}
+import { useNoteAgent } from "../../adapters/note-agent";
 
 /**
  * Props for ChatMessages component
  */
 export interface ChatMessagesProps {
-  /** All messages in the current chat session */
-  messages: ChatMessage[];
-  /** Whether a message is currently being sent */
-  isSending: boolean;
-  /** Whether the session is ready for user input */
-  isSessionReady: boolean;
-  /** Error information (if any) */
-  errorInfo: ErrorInfo | null;
   /** View instance for event registration */
   view: ChatView;
-  /** Callback to clear the error */
-  onClearError: () => void;
 }
 
 /**
@@ -42,20 +23,17 @@ export interface ChatMessagesProps {
  * - Empty state display
  * - Loading indicator
  */
-export function ChatMessages({
-  messages,
-  isSending,
-  isSessionReady,
-  errorInfo,
-  view,
-  onClearError,
-}: ChatMessagesProps) {
+export function ChatMessages({ view }: ChatMessagesProps) {
+  const isSessionReady = useNoteAgent((s) => s.isSessionReady);
+  const isSending = useNoteAgent((s) => s.isSending);
+  const messages = useNoteAgent((s) => s.messages);
+  const error = useNoteAgent((s) => s.error);
+  const clearError = useNoteAgent((s) => s.clearError);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  /**
-   * Check if the scroll position is near the bottom.
-   */
+  // Check if the scroll position is near the bottom.
   const checkIfAtBottom = useCallback(() => {
     const container = containerRef.current;
     if (!container) return true;
@@ -67,9 +45,7 @@ export function ChatMessages({
     return isNearBottom;
   }, []);
 
-  /**
-   * Scroll to the bottom of the container.
-   */
+  //Scroll to the bottom of the container.
   const scrollToBottom = useCallback(() => {
     const container = containerRef.current;
     if (container) {
@@ -102,44 +78,48 @@ export function ChatMessages({
     checkIfAtBottom();
   }, [view, checkIfAtBottom]);
 
+  if (!isSessionReady) {
+    return (
+      <div ref={containerRef} className="chat-view-messages">
+        <div className="chat-empty-state">正在新建聊天...</div>
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className="chat-view-messages">
-      {errorInfo ? (
-        <div className="chat-error-container">
-          <h4 className="chat-error-title">{errorInfo.title}</h4>
-          <p className="chat-error-message">{errorInfo.message}</p>
-          {errorInfo.suggestion && (
-            <p className="chat-error-suggestion">💡 {errorInfo.suggestion}</p>
-          )}
-          <button onClick={onClearError} className="chat-error-button">
-            OK
-          </button>
-        </div>
-      ) : messages.length === 0 ? (
-        <div className="chat-empty-state">
-          {!isSessionReady ? "Connecting to agent..." : "Start a conversation with agent..."}
-        </div>
+      {messages.length === 0 ? (
+        <div className="chat-empty-state">发送消息开始对话</div>
       ) : (
         <>
           {messages.map((message) => (
             <MessageRenderer message={message} />
           ))}
-          {isSending && (
-            <div className="loading-indicator">
-              <div className="loading-dots">
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-                <div className="loading-dot"></div>
-              </div>
-            </div>
-          )}
         </>
+      )}
+      {isSending && (
+        <div className="loading-indicator">
+          <div className="loading-dots">
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+          </div>
+        </div>
+      )}
+      {error && (
+        <div className="chat-error-container">
+          <h4 className="chat-error-title">{error.title}</h4>
+          <p className="chat-error-message">{error.message}</p>
+          <button onClick={clearError} className="chat-error-button">
+            清除
+          </button>
+        </div>
       )}
     </div>
   );

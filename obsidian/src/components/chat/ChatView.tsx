@@ -27,21 +27,11 @@ import { useSlashCommands } from "../../hooks/useSlashCommands";
 import { useAutoMention } from "../../hooks/useAutoMention";
 import { useAgentSession } from "../../hooks/useAgentSession";
 import { useChat } from "../../hooks/useChat";
-import { usePermission } from "../../hooks/usePermission";
 
 // Type definitions for Obsidian internal APIs
 interface VaultAdapterWithBasePath {
   basePath?: string;
 }
-
-interface AppWithSettings {
-  setting: {
-    open: () => void;
-    openTabById: (id: string) => void;
-  };
-}
-
-export const VIEW_TYPE_CHAT = "agent-client-chat-view";
 
 function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: ChatView }) {
   // ============================================================
@@ -73,23 +63,18 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
 
   const agentSession = useAgentSession(acpAdapter, plugin.settingsStore, vaultPath);
 
-  const { session, errorInfo: sessionErrorInfo, isReady: isSessionReady } = agentSession;
+  const { session } = agentSession;
 
   const chat = useChat(acpAdapter, vaultAccessAdapter, noteMentionService, {
     sessionId: session.sessionId,
     authMethods: session.authMethods,
   });
 
-  const { messages, isSending } = chat;
-
-  const permission = usePermission(acpAdapter, messages);
+  const { messages } = chat;
 
   const mentions = useMentions(vaultAccessAdapter, plugin);
   const autoMention = useAutoMention(vaultAccessAdapter);
   const slashCommands = useSlashCommands(session.availableCommands || [], autoMention.toggle);
-
-  // Combined error info (session errors take precedence)
-  const errorInfo = sessionErrorInfo || chat.errorInfo || permission.errorInfo;
 
   // ============================================================
   // Local State
@@ -103,11 +88,8 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
    * Handle new chat request.
    */
   const handleNewChat = useCallback(async () => {
-    const isAgentSwitch = false;
-
-    // Skip if already empty AND not switching agents
-    if (messages.length === 0 && !isAgentSwitch) {
-      new Notice("[Agent Client] Already a new session");
+    if (messages.length === 0) {
+      new Notice("已经在新对话中了！");
       return;
     }
 
@@ -117,12 +99,6 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
     chat.clearMessages();
     await agentSession.restartSession();
   }, [messages, session, autoMention, chat, agentSession]);
-
-  const handleOpenSettings = useCallback(() => {
-    const appWithSettings = plugin.app as unknown as AppWithSettings;
-    appWithSettings.setting.open();
-    appWithSettings.setting.openTabById(plugin.manifest.id);
-  }, [plugin]);
 
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -145,10 +121,6 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
       setRestoredMessage(lastMessage);
     }
   }, [agentSession, chat.lastUserMessage]);
-
-  const handleClearError = useCallback(() => {
-    chat.clearError();
-  }, [chat]);
 
   const handleRestoredMessageConsumed = useCallback(() => {
     setRestoredMessage(null);
@@ -225,95 +197,14 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
   }, [autoMention.updateActiveNote, vaultAccessAdapter]);
 
   // ============================================================
-  // Effects - Workspace Events (Hotkeys)
-  // ============================================================
-  useEffect(() => {
-    const workspace = plugin.app.workspace;
-
-    const eventRef = workspace.on("agent-client:toggle-auto-mention" as "quit", () => {
-      autoMention.toggle();
-    });
-
-    return () => {
-      workspace.offref(eventRef);
-    };
-  }, [plugin.app.workspace, autoMention.toggle]);
-
-  // Handle new chat request from plugin commands (e.g., "New chat with [Agent]")
-  useEffect(() => {
-    const workspace = plugin.app.workspace;
-
-    // Cast to any to bypass Obsidian's type constraints for custom events
-    const eventRef = (
-      workspace as unknown as {
-        on: (name: string, callback: () => void) => ReturnType<typeof workspace.on>;
-      }
-    ).on("agent-client:new-chat-requested", () => {
-      void handleNewChat();
-    });
-
-    return () => {
-      workspace.offref(eventRef);
-    };
-  }, [plugin.app.workspace, handleNewChat]);
-
-  useEffect(() => {
-    const workspace = plugin.app.workspace;
-
-    const approveRef = workspace.on("agent-client:approve-active-permission" as "quit", () => {
-      void (async () => {
-        const success = await permission.approveActivePermission();
-        if (!success) {
-          new Notice("[Agent Client] No active permission request");
-        }
-      })();
-    });
-
-    const rejectRef = workspace.on("agent-client:reject-active-permission" as "quit", () => {
-      void (async () => {
-        const success = await permission.rejectActivePermission();
-        if (!success) {
-          new Notice("[Agent Client] No active permission request");
-        }
-      })();
-    });
-
-    const cancelRef = workspace.on("agent-client:cancel-message" as "quit", () => {
-      void handleStopGeneration();
-    });
-
-    return () => {
-      workspace.offref(approveRef);
-      workspace.offref(rejectRef);
-      workspace.offref(cancelRef);
-    };
-  }, [
-    plugin.app.workspace,
-    permission.approveActivePermission,
-    permission.rejectActivePermission,
-    handleStopGeneration,
-  ]);
-
-  // ============================================================
   // Render
   // ============================================================
   return (
     <div className="chat-view-container">
-      <ChatHeader onNewChat={() => void handleNewChat()} onOpenSettings={handleOpenSettings} />
-
-      <ChatMessages
-        messages={messages}
-        isSending={isSending}
-        isSessionReady={isSessionReady}
-        errorInfo={errorInfo}
-        view={view}
-        onClearError={handleClearError}
-      />
+      <ChatHeader onNewChat={() => void handleNewChat()} />
+      <ChatMessages view={view} />
 
       <ChatInput
-        isSending={isSending}
-        isSessionReady={isSessionReady}
-        availableCommands={session.availableCommands || []}
         autoMentionEnabled={settings.autoMentionActiveNote}
         restoredMessage={restoredMessage}
         mentions={mentions}
@@ -328,18 +219,17 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
 }
 
 export class ChatView extends ItemView {
+  static readonly ViewType = "agent-client-chat-view";
   private root: Root | null = null;
   private plugin: AgentClientPlugin;
-  private logger: Logger;
 
   constructor(leaf: WorkspaceLeaf, plugin: AgentClientPlugin) {
     super(leaf);
     this.plugin = plugin;
-    this.logger = new Logger(plugin);
   }
 
   getViewType() {
-    return VIEW_TYPE_CHAT;
+    return ChatView.ViewType;
   }
 
   getDisplayText() {

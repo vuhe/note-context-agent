@@ -14,12 +14,6 @@ import { useNoteAgent } from "../../adapters/note-agent";
  * Props for ChatInput component
  */
 export interface ChatInputProps {
-  /** Whether a message is currently being sent */
-  isSending: boolean;
-  /** Whether the session is ready for user input */
-  isSessionReady: boolean;
-  /** Available slash commands */
-  availableCommands: SlashCommand[];
   /** Whether auto-mention setting is enabled */
   autoMentionEnabled: boolean;
   /** Message to restore (e.g., after cancellation) */
@@ -51,9 +45,6 @@ export interface ChatInputProps {
  * - Keyboard navigation
  */
 export function ChatInput({
-  isSending,
-  isSessionReady,
-  availableCommands,
   autoMentionEnabled,
   restoredMessage,
   mentions,
@@ -63,6 +54,11 @@ export function ChatInput({
   onStopGeneration,
   onRestoredMessageConsumed,
 }: ChatInputProps) {
+  const isSessionReady = useNoteAgent((s) => s.isSessionReady);
+  const isSending = useNoteAgent((s) => s.isSending);
+  const permission = useNoteAgent((s) => s.permission);
+  const respPermission = useNoteAgent((s) => s.responsePermission);
+
   // Local state
   const [inputValue, setInputValue] = useState("");
   const [hintText, setHintText] = useState<string | null>(null);
@@ -382,10 +378,7 @@ export function ChatInput({
   const isButtonDisabled = !isSending && (inputValue.trim() === "" || !isSessionReady);
 
   // Placeholder text
-  const placeholder = `Message agent - @ to mention notes${availableCommands.length > 0 ? ", / for commands" : ""}`;
-
-  const permission = useNoteAgent((s) => s.permission);
-  const respPermission = useNoteAgent((s) => s.responsePermission);
+  const placeholder = "Message agent - @ to mention notes}";
 
   return (
     <div className="chat-input-container">

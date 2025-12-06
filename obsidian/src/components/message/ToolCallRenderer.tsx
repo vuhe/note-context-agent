@@ -1,7 +1,5 @@
 import * as React from "react";
-const { useMemo } = React;
 import type { MessageContent } from "../../adapters/chat-message";
-import { toRelativePath } from "../../shared/path-utils";
 import { useNoteAgent } from "../../adapters/note-agent";
 import { MarkdownTextRenderer } from "./MarkdownTextRenderer";
 
@@ -12,13 +10,21 @@ interface ToolCallRendererProps {
 export function ToolCallRenderer({ content }: ToolCallRendererProps) {
   const { kind, title, status, locationPath, content: toolContent } = content;
 
-  const plugin = useNoteAgent((s) => s.obsidian);
-
-  // Get vault path for relative path display
-  const vaultPath = useMemo(() => {
+  // Get relative path for display
+  const toRelativePath = (locationPath: string) => {
+    const plugin = useNoteAgent((s) => s.obsidian);
     const adapter = plugin?.app.vault.adapter as { basePath?: string };
-    return adapter.basePath || "";
-  }, [plugin]);
+    const vaultPath = adapter.basePath || "";
+
+    // Normalize paths (remove trailing slashes)
+    const normalizedBase = vaultPath.replace(/\/+$/, "");
+    const normalizedPath = locationPath.replace(/\/+$/, "");
+
+    if (normalizedPath.startsWith(normalizedBase + "/")) {
+      return normalizedPath.slice(normalizedBase.length + 1);
+    }
+    return locationPath;
+  };
 
   // Get icon based on kind
   const getKindIcon = (kind?: string) => {
@@ -56,9 +62,7 @@ export function ToolCallRenderer({ content }: ToolCallRendererProps) {
         </div>
         {locationPath !== undefined && (
           <div className="message-tool-call-locations">
-            <span className="message-tool-call-location">
-              {toRelativePath(locationPath, vaultPath)}
-            </span>
+            <span className="message-tool-call-location">{toRelativePath(locationPath)}</span>
           </div>
         )}
         <div className="message-tool-call-status">Status: {status}</div>

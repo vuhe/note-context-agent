@@ -1,5 +1,7 @@
 import * as React from "react";
 import { setIcon } from "obsidian";
+import { useNoteAgent } from "../../adapters/note-agent";
+import { useCallback } from "react";
 const { useRef, useEffect } = React;
 
 /**
@@ -8,8 +10,6 @@ const { useRef, useEffect } = React;
 export interface ChatHeaderProps {
   /** Callback to create a new chat session */
   onNewChat: () => void;
-  /** Callback to open settings */
-  onOpenSettings: () => void;
 }
 
 /**
@@ -20,13 +20,19 @@ export interface ChatHeaderProps {
  * - Update notification (if available)
  * - Action buttons (new chat, settings)
  */
-export function ChatHeader({ onNewChat, onOpenSettings }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat }: ChatHeaderProps) {
+  const title = useNoteAgent((s) => s.title);
+
+  const onOpenSettings = useCallback(() => {
+    return;
+  }, []);
+
   return (
     <div className="chat-view-header">
-      <h3 className="chat-view-header-title">Note ACP</h3>
+      <h3 className="chat-view-header-title">{title}</h3>
       <div className="chat-view-header-actions">
-        <HeaderButton iconName="plus" tooltip="New chat" onClick={onNewChat} />
-        <HeaderButton iconName="settings" tooltip="Settings" onClick={onOpenSettings} />
+        <HeaderButton iconName="plus" tooltip="新聊天" onClick={onNewChat} />
+        <HeaderButton iconName="file-clock" tooltip="历史记录" onClick={onOpenSettings} />
       </div>
     </div>
   );

@@ -3,8 +3,13 @@ import { create } from "zustand";
 import { NoteContextAgent } from "note-agent";
 import EventEmitter from "eventemitter3";
 import { Logger } from "../shared/logger";
-import { App, Platform, Plugin } from "obsidian";
+import { App, Notice, Platform, Plugin } from "obsidian";
 import { ChatMessage } from "./chat-message";
+
+export interface AgentError {
+  title: string;
+  message: string;
+}
 
 interface INoteAgent extends acp.Client {
   // 用于插件加载检测等
@@ -20,33 +25,52 @@ interface INoteAgent extends acp.Client {
   sessionId: string;
   title: string;
   messages: ChatMessage[];
+  isSessionReady: boolean;
+  isSending: boolean;
+  error?: AgentError;
 
   // 权限请求和权限回复通知
   permission: acp.RequestPermissionRequest | null;
   permissionEvent: EventEmitter;
 
-  // getter
+  // getter/setter
   obsidianApp: () => App | undefined;
+  clearError: () => void;
 
   // 客户端调用
   initialize: (plugin: Plugin) => Promise<void>;
+  newSession: () => Promise<void>;
   responsePermission: (params: acp.RequestPermissionOutcome) => void;
 }
 
 export const useNoteAgent = create<INoteAgent>((set, get) => ({
+  // 用于插件加载检测等
   isInitialized: false,
   obsidian: undefined,
+
+  // 用于连接后端服务
   backend: null,
   clientConnection: null,
   agentConnection: null,
+
+  // UI 渲染状态
   sessionId: "",
   title: "note-agent",
   messages: [],
+  isSessionReady: false,
+  isSending: false,
+  error: undefined,
+
+  // 权限请求和权限回复通知
   permission: null,
   permissionEvent: new EventEmitter(),
 
   obsidianApp: () => {
     return get().obsidian?.app;
+  },
+
+  clearError: () => {
+    set({ error: undefined });
   },
 
   initialize: async (plugin) => {
@@ -101,6 +125,14 @@ export const useNoteAgent = create<INoteAgent>((set, get) => ({
 
     // 初始化完成，标记为资源准备完毕
     set({ isInitialized: true, obsidian: plugin });
+  },
+
+  newSession: async () => {
+    if (get().messages.length === 0) {
+      new Notice("已经在新对话中了！");
+      return;
+    }
+    // TODO: 获取cwd，传入acp后端实现
   },
 
   sessionUpdate: async (params) => {
