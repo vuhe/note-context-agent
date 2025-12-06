@@ -23,7 +23,6 @@ import { ObsidianVaultAdapter } from "../../adapters/obsidian/vault.adapter";
 // Hooks imports
 import { useSettings } from "../../hooks/useSettings";
 import { useMentions } from "../../hooks/useMentions";
-import { useSlashCommands } from "../../hooks/useSlashCommands";
 import { useAutoMention } from "../../hooks/useAutoMention";
 import { useAgentSession } from "../../hooks/useAgentSession";
 import { useChat } from "../../hooks/useChat";
@@ -74,7 +73,6 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
 
   const mentions = useMentions(vaultAccessAdapter, plugin);
   const autoMention = useAutoMention(vaultAccessAdapter);
-  const slashCommands = useSlashCommands(session.availableCommands || [], autoMention.toggle);
 
   // ============================================================
   // Local State
@@ -208,7 +206,6 @@ function ChatComponent({ plugin, view }: { plugin: AgentClientPlugin; view: Chat
         autoMentionEnabled={settings.autoMentionActiveNote}
         restoredMessage={restoredMessage}
         mentions={mentions}
-        slashCommands={slashCommands}
         autoMention={autoMention}
         onSendMessage={handleSendMessage}
         onStopGeneration={handleStopGeneration}

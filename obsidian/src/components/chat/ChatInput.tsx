@@ -3,9 +3,7 @@ const { useRef, useState, useEffect, useCallback } = React;
 import { setIcon } from "obsidian";
 
 import type { NoteMetadata } from "../../domain/ports/vault-access.port";
-import type { SlashCommand } from "../../domain/models/chat-session";
 import type { UseMentionsReturn } from "../../hooks/useMentions";
-import type { UseSlashCommandsReturn } from "../../hooks/useSlashCommands";
 import type { UseAutoMentionReturn } from "../../hooks/useAutoMention";
 import { Logger } from "../../shared/logger";
 import { useNoteAgent } from "../../adapters/note-agent";
@@ -20,8 +18,6 @@ export interface ChatInputProps {
   restoredMessage: string | null;
   /** Mentions hook state and methods */
   mentions: UseMentionsReturn;
-  /** Slash commands hook state and methods */
-  slashCommands: UseSlashCommandsReturn;
   /** Auto-mention hook state and methods */
   autoMention: UseAutoMentionReturn;
   /** Callback to send a message */
@@ -48,7 +44,6 @@ export function ChatInput({
   autoMentionEnabled,
   restoredMessage,
   mentions,
-  slashCommands,
   autoMention,
   onSendMessage,
   onStopGeneration,
@@ -95,39 +90,6 @@ export function ChatInput({
       setTextAndFocus(newText);
     },
     [mentions, inputValue, setTextAndFocus],
-  );
-
-  /**
-   * Handle slash command selection from dropdown.
-   */
-  const handleSelectSlashCommand = useCallback(
-    (command: SlashCommand) => {
-      const newText = slashCommands.selectSuggestion(inputValue, command);
-      setInputValue(newText);
-
-      // Setup hint overlay if command has hint
-      if (command.hint) {
-        const cmdText = `/${command.name} `;
-        setCommandText(cmdText);
-        setHintText(command.hint);
-      } else {
-        // No hint - clear hint state
-        setHintText(null);
-        setCommandText("");
-      }
-
-      // Place cursor right after command name (before hint text)
-      window.setTimeout(() => {
-        const textarea = textareaRef.current;
-        if (textarea) {
-          const cursorPos = command.hint ? `/${command.name} `.length : newText.length;
-          textarea.selectionStart = cursorPos;
-          textarea.selectionEnd = cursorPos;
-          textarea.focus();
-        }
-      }, 0);
-    },
-    [slashCommands, inputValue],
   );
 
   /**
@@ -209,47 +171,29 @@ export function ChatInput({
    */
   const handleDropdownKeyPress = useCallback(
     (e: React.KeyboardEvent): boolean => {
-      const isSlashCommandActive = slashCommands.isOpen;
-      const isMentionActive = mentions.isOpen;
-
-      if (!isSlashCommandActive && !isMentionActive) {
+      if (!mentions.isOpen) {
         return false;
       }
 
       // Arrow navigation
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        if (isSlashCommandActive) {
-          slashCommands.navigate("down");
-        } else {
-          mentions.navigate("down");
-        }
+        mentions.navigate("down");
         return true;
       }
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        if (isSlashCommandActive) {
-          slashCommands.navigate("up");
-        } else {
-          mentions.navigate("up");
-        }
+        mentions.navigate("up");
         return true;
       }
 
       // Select item (Enter or Tab)
       if (e.key === "Enter" || e.key === "Tab") {
         e.preventDefault();
-        if (isSlashCommandActive) {
-          const selectedCommand = slashCommands.suggestions[slashCommands.selectedIndex];
-          if (selectedCommand) {
-            handleSelectSlashCommand(selectedCommand);
-          }
-        } else {
-          const selectedSuggestion = mentions.suggestions[mentions.selectedIndex];
-          if (selectedSuggestion) {
-            selectMention(selectedSuggestion);
-          }
+        const selectedSuggestion = mentions.suggestions[mentions.selectedIndex];
+        if (selectedSuggestion) {
+          selectMention(selectedSuggestion);
         }
         return true;
       }
@@ -257,17 +201,13 @@ export function ChatInput({
       // Close dropdown (Escape)
       if (e.key === "Escape") {
         e.preventDefault();
-        if (isSlashCommandActive) {
-          slashCommands.close();
-        } else {
-          mentions.close();
-        }
+        mentions.close();
         return true;
       }
 
       return false;
     },
-    [slashCommands, mentions, handleSelectSlashCommand, selectMention],
+    [mentions, selectMention],
   );
 
   /**
@@ -315,11 +255,8 @@ export function ChatInput({
 
       // Update mention suggestions
       void mentions.updateSuggestions(newValue, cursorPosition);
-
-      // Update slash command suggestions
-      slashCommands.updateSuggestions(newValue, cursorPosition);
     },
-    [hintText, commandText, mentions, slashCommands],
+    [hintText, commandText, mentions],
   );
 
   // Adjust textarea height when input changes
